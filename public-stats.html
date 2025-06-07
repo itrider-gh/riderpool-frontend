@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statistiques Pool - Chauffagistes</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background-color: #0d0d0d;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+      }
+      .section-title {
+        color: #f7931a;
+        border-bottom: 1px solid #f7931a44;
+        padding-bottom: 0.5rem;
+        margin-top: 2rem;
+      }
+      .text-orange {
+        color: #f7931a;
+      }
+      .form-control, .btn {
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body class="container py-4">
+    <h1 class="text-center text-orange">Statistiques de la Pool Chauffagistes</h1>
+
+    <section>
+      <h2 class="section-title">Statistiques Globales (Pool)</h2>
+      <div id="poolStats">Chargement...</div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Top Utilisateurs</h2>
+      <div class="row">
+        <div class="col-md-6">
+          <h5 class="text-orange">Top Hashrate</h5>
+          <ul id="topHashrate" class="list-unstyled"></ul>
+        </div>
+        <div class="col-md-6">
+          <h5 class="text-orange">Top Best Share</h5>
+          <ul id="topBestShares" class="list-unstyled"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Historique Hashrate</h2>
+      <canvas id="hashrateChart" style="max-height: 300px;"></canvas>
+    </section>
+
+    <section>
+      <h2 class="section-title">Rechercher un utilisateur</h2>
+      <input type="text" id="btcInput" class="form-control" placeholder="Entrer votre adresse BTC" />
+      <button onclick="searchUser()" class="btn btn-warning mt-2">Voir mes stats</button>
+      <div id="userStats" class="mt-4"></div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      const apiBase = "https://chauffagistes-pool.fr:3000/api";
+
+      function formatHashrate(hs) {
+        if (!hs) return "–";
+        const units = ["H", "K", "M", "G", "T", "P"];
+        let i = 0;
+        while (hs >= 1000 && i < units.length - 1) {
+          hs /= 1000;
+          i++;
+        }
+        return hs.toFixed(2) + "" + units[i];
+      }
+
+      function loadPoolStats() {
+        fetch(`${apiBase}/pool`)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("poolStats").innerHTML = `
+              <ul>
+                <li>Hashrate 1h : ${data.hashrates?.hashrate1hr || "–"}</li>
+                <li>Shares acceptés : ${formatNumberUnit(data.shares?.accepted)}</li>
+                <li>Shares rejetés : ${formatNumberUnit(data.shares?.rejected)}</li>
+                <li>SPS 1h : ${data.shares?.SPS1h || "–"}</li>
+                <li>Best share : ${formatNumberUnit(data.shares?.bestshare)}</li>
+              </ul>
+            `;
+          });
+      }
+
+      function loadTopStats() {
+        fetch(`${apiBase}/top`)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("topHashrate").innerHTML = data.topHashrate.map(u =>
+              `<li>${u.address} (${u.workerCount} workers) – ${formatHashrate(u.totalHashrate1hr)}</li>`
+            ).join("");
+            document.getElementById("topBestShares").innerHTML = data.topBestShares.map(u =>
+              `<li>${u.address} (${u.workerCount} workers) – ${formatNumberUnit(u.bestshare)}</li>`
+            ).join("");
+          });
+      }
+
+      function loadHashrateGraph() {
+        fetch(`${apiBase}/hashrate`)
+          .then(res => res.json())
+          .then(data => {
+            const labels = data.map(point => point.date);
+            const hashrates = data.map(point => point.hashrate / 1e12);
+            new Chart(document.getElementById('hashrateChart'), {
+              type: 'line',
+              data: {
+                labels,
+                datasets: [{
+                  label: 'Hashrate (TH/s)',
+                  data: hashrates,
+                  borderColor: '#f7931a',
+                  backgroundColor: 'rgba(247,147,26,0.2)',
+                  fill: true,
+                  tension: 0.4
+                }]
+              },
+              options: {
+                scales: {
+                  y: { title: { display: true, text: 'TH/s' } },
+                  x: { title: { display: true, text: 'Date' } }
+                },
+                plugins: { legend: { display: false } }
+              }
+            });
+          });
+      }
+
+      function formatNumberUnit(value) {
+        if (!value || isNaN(value)) return "–";
+        const units = ["", "K", "M", "G", "T", "P"];
+        let unitIndex = 0;
+        while (value >= 1000 && unitIndex < units.length - 1) {
+            value /= 1000;
+            unitIndex++;
+        }
+        return value.toFixed(2) + "" + units[unitIndex];
+      }
+
+      function searchUser() {
+        const addr = document.getElementById("btcInput").value.trim();
+        if (!addr) return alert("Adresse requise");
+
+        fetch(`${apiBase}/stats/${addr}`)
+            .then(res => res.ok ? res.json() : Promise.reject("Introuvable"))
+            .then(data => {
+            // Trier les workers par hashrate1d décroissant
+            const sortedWorkers = [...data.workers].sort((a, b) => {
+                const ha = parseHashrate(b.hashrate1d || "0");
+                const hb = parseHashrate(a.hashrate1d || "0");
+                return ha - hb;
+            });
+
+            const html = `
+                <h4 class="text-orange">${data.address}</h4>
+                <p>Workers : ${data.globalStats.workers}</p>
+                <ul>
+                <li>Hashrate 1d : ${data.globalStats.hashrate1d}</li>
+                <li>Shares : ${formatNumberUnit(data.globalStats.shares)}</li>
+                <li>Best share : ${formatNumberUnit(data.globalStats.bestshare)}</li>
+                </ul>
+
+                <h5 class="mt-3">Détails des Workers (triés par hashrate)</h5>
+                <table class="table table-dark table-striped table-bordered table-sm">
+                <thead>
+                    <tr>
+                    <th>Nom</th>
+                    <th>Hashrate 1d</th>
+                    <th>Shares</th>
+                    <th>Best share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sortedWorkers.map(w => {
+                    const name = w.workername.split('.').pop();
+                    return `
+                        <tr>
+                        <td>${name}</td>
+                        <td>${w.hashrate1hr || "–"}</td>
+                        <td>${formatNumberUnit(w.shares)}</td>
+                        <td>${formatNumberUnit(w.bestshare)}</td>
+                        </tr>
+                    `;
+                    }).join("")}
+                </tbody>
+                </table>
+            `;
+            document.getElementById("userStats").innerHTML = html;
+            })
+            .catch(err => {
+            document.getElementById("userStats").innerHTML = `<p class="text-danger">Adresse non trouvée</p>`;
+            });
+        }
+
+      function parseHashrate(value) {
+        if (typeof value !== "string") return 0;
+        const unit = value.slice(-1).toUpperCase();
+        const number = parseFloat(value);
+        if (isNaN(number)) return 0;
+
+        switch (unit) {
+            case 'H': return number;
+            case 'K': return number * 1e3;
+            case 'M': return number * 1e6;
+            case 'G': return number * 1e9;
+            case 'T': return number * 1e12;
+            case 'P': return number * 1e15;
+            default: return number;
+        }
+      }
+
+      loadPoolStats();
+      loadTopStats();
+      loadHashrateGraph();
+    </script>
+  </body>
+</html>

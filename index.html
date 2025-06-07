@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Participez au minage Bitcoin en France avec notre pool communautaire. Un projet de chauffage intelligent utilisant la chaleur du minage pour chauffer." />
+    <meta property="og:title" content="Chauffage & Bitcoin - Pool de minage FR" />
+    <meta property="og:description" content="Pool Bitcoin française utilisant la chaleur du minage pour le chauffage." />
+    <meta property="og:image" content="https://chauffagistes-pool.fr/logo.jpg" />
+    <meta property="og:url" content="https://chauffagistes-pool.fr" />
+    <title>Chauffage & Bitcoin - Pool de minage communautaire française</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+      body {
+        background-color: #0d0d0d;
+        color: #fff;
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+      }
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .navbar-brand img {
+        width: 40px;
+        border-radius: 8px;
+      }
+      .section {
+        padding: 2rem 1rem; /* AVANT c'était 4rem => maintenant 2rem */
+      }
+      .section-title {
+        color: #f7931a;
+        margin-bottom: 1.5rem; /* Un peu moins de marge */
+        border-bottom: 1px solid #f7931a44;
+        padding-bottom: 0.5rem;
+      }
+      code {
+        background: #333;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        color: #f7931a;
+      }
+      footer {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #aaa;
+        font-size: 0.9rem;
+      }
+      .social-icons a {
+        color: #f7931a;
+        margin: 0 10px;
+        font-size: 1.5rem;
+      }
+      .hashrate-header {
+        color: #f7931a;
+        font-size: 0.9rem;
+        margin-left: 1rem;
+        white-space: nowrap;
+      }
+      .responsive-logo {
+        max-width: 200px;   /* taille maximale sur grand écran */
+        width: 100%;        /* s'adapte à la taille du parent */
+        height: auto;       /* conserve le ratio largeur/hauteur */
+        border-radius: 12px;
+      }
+      #embers {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+        background: transparent;
+      }
+    </style>
+    
+  </head>
+  <body>
+    <canvas id="embers"></canvas>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+          <img src="logo.jpg" alt="Logo Chauffagistes" />
+          <div class="d-flex flex-column align-items-start ms-2">
+            <strong>Chauffagistes</strong>
+            <small id="hashrateHeader" class="text-warning" style="font-size: 0.7rem;">Hashrate : ...</small>
+          </div>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end text-center" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="#public">Pool publique</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#private">Minage privé</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#don">Donations</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#discord">Communauté</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <section class="section">
+        <h2 class="section-title">La pool Bitcoin communautaire française</h2>
+        <p>
+          Projet communautaire français de minage <strong>Bitcoin</strong>, visant aussi à valoriser la chaleur dégagée par les machines pour le <strong>chauffage</strong>. Une manière innovante de contribuer à la décentralisation du réseau tout en réchauffant intelligemment.
+        </p>
+        <div class="mt-3">
+          <i class="fas fa-map-marker-alt text-warning"></i> <span class="ms-1">France</span>
+        </div>
+        <div class="mt-4">
+          <img src="logo.gif" alt="Logo Chauffagistes" class="responsive-logo" />
+        </div>
+      </section>
+
+      <section id="public" class="section">
+        <h3 class="section-title">Accès à la pool publique</h3>
+        <p>
+          La pool est publique et rejoignable en solo mining via :<br />
+          <code>stratum+tcp://chauffagistes-pool.fr:3333</code>
+        </p>
+        <p>
+          Utilisez le format <code>adresse_btc.worker</code> avec le mot de passe <code>x</code>.
+        </p>
+        <div id="pool-info">
+          <p>Chargement des données de la pool...</p>
+        </div>
+
+        <div class="mt-4">
+          <a href="https://chauffagistes-pool.fr/public-stats.html" class="btn btn-outline-warning">
+            📊 Voir toutes les statistiques
+          </a>
+        </div>
+
+        <div class="mt-5">
+          <canvas id="hashrateChart" style="max-width: 100%; max-height: 300px;"></canvas>
+        </div>
+      </section>
+
+      <section id="private" class="section">
+        <h3 class="section-title">Minage mutualisé (section privée)</h3>
+        <p>
+          Une section privée avec minage mutualisé et dashboard est disponible.<br />
+          Elle est accessible sous conditions via le serveur Discord.
+        </p>
+        <a
+          href="https://swakraft.hopto.org/chauffagistes"
+          class="btn btn-warning"
+          target="_blank"
+        >
+          Accéder au Dashboard privé
+        </a>
+      </section>
+
+      <section id="don" class="section">
+        <h3 class="section-title">Financement & Frais</h3>
+        <p>
+          La pool prend <strong>0% de frais</strong> et fonctionne grâce aux dons de la communauté.
+        </p>
+        <p>🟠 Donation via Bitcoin (on-chain) :</p>
+        <button
+          class="btn btn-outline-warning mb-2"
+          onclick="copyToClipboard('bc1qkt3n2yzu0kxlm72hhhx9vnxge8zhr5k2q4zc6l')"
+        >
+          Copier l'adresse Bitcoin
+        </button>
+
+        <p>⚡ Donation via Lightning :</p>
+        <button
+          class="btn btn-outline-warning"
+          onclick="copyToClipboard('chauffagistes@walletofsatoshi.com')"
+        >
+          Copier l'adresse Lightning
+        </button>
+      </section>
+
+
+      <section class="section">
+        <h3 class="section-title">Minage & Chauffage : une synergie</h3>
+        <p>
+          Le nom "Chauffagistes" n’est pas anodin : en réutilisant la chaleur produite par les équipements de minage <strong>Bitcoin</strong>, il est possible d’en faire un usage utile pour le <strong>chauffage</strong> domestique ou collectif. C’est une piste explorée par plusieurs membres de la communauté, notamment en France.
+        </p>
+      </section>
+
+      <section id="discord" class="section">
+        <h3 class="section-title">Communauté</h3>
+        <p>
+          Le meilleur moyen de rejoindre la communauté, poser des questions ou contribuer au projet, c’est le serveur Discord :
+        </p>
+        <a
+          class="btn btn-primary"
+          href="https://discord.gg/5s9xfbZPBR"
+          target="_blank"
+        >
+          Rejoindre le Discord
+        </a>
+      </section>
+    </main>
+
+    <footer>
+      <div class="social-icons mb-2">
+        <a href="https://discord.gg/5s9xfbZPBR" target="_blank" aria-label="Discord">
+          <i class="fab fa-discord"></i>
+        </a>
+        <a href="https://x.com/Chauff_pool" target="_blank" aria-label="Twitter">
+          <i class="fab fa-x-twitter"></i>
+        </a>
+      </div>
+      © 2025 Chauffagistes Pool – Made with ❤️ en France
+      <a href="/mentions-legales.html" class="text-decoration-none text-warning">Mentions légales</a>
+
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Adresse copiée : " + text);
+        });
+      }
+
+      function formatWithUnit(value) {
+        if (typeof value !== 'number') return value;
+        const units = ['', 'K', 'M', 'G', 'T', 'P'];
+        let unitIndex = 0;
+        while (value >= 1000 && unitIndex < units.length - 1) {
+          value /= 1000;
+          unitIndex++;
+        }
+        return value.toFixed(2) + units[unitIndex];
+      }
+
+      fetch("https://chauffagistes-pool.fr:3000/api/pool")
+        .then(res => res.json())
+        .then(pool => {
+          const runtime = pool.runtime;
+          const hashrate = pool.hashrates?.hashrate1hr || "–";
+          const accepted = pool.shares?.accepted?.toLocaleString("fr-FR") || "–";
+          const rejected = pool.shares?.rejected?.toLocaleString("fr-FR") || "–";
+          const sps = pool.shares?.SPS1h || "–";
+          const bestshare = formatWithUnit(pool.shares?.bestshare || 0);
+
+          const html = `
+            <h4 class="text-warning">Statistiques Pool</h4>
+            <ul class="list-unstyled">
+              <li><strong>Hashrate 1h :</strong> ${hashrate}</li>
+              <li><strong>Shares acceptés :</strong> ${accepted}</li>
+              <li><strong>Shares rejetés :</strong> ${rejected}</li>
+              <li><strong>Shares/s (SPS) :</strong> ${sps}</li>
+              <li><strong>Best share :</strong> ${bestshare}</li>
+              <li><strong>Utilisateurs connectés :</strong> ${runtime.Users}</li>
+              <li><strong>Workers actifs :</strong> ${runtime.Workers}</li>
+            </ul>
+          `;
+          document.getElementById("pool-info").innerHTML = html;
+
+          // ➔ Remplir le hashrate dans le header :
+          document.getElementById("hashrateHeader").innerText = "Hashrate : " + hashrate;
+        })
+        .catch(err => {
+          console.error("Erreur de récupération de la pool :", err);
+          document.getElementById("pool-info").innerHTML = "<p class='text-danger'>Erreur de chargement des données.</p>";
+          document.getElementById("hashrateHeader").innerText = "Hashrate : –";
+        });
+
+      // Fonction pour charger l'historique du hashrate et afficher un graphique
+      function loadHashrateGraph() {
+        fetch("https://chauffagistes-pool.fr:3000/api/hashrate")
+          .then(res => res.json())
+          .then(data => {
+            if (!data.length) {
+              console.warn("Aucune donnée pour le graphique");
+              return;
+            }
+
+            const labels = data.map(point => point.date);
+            const hashrates = data.map(point => point.hashrate / 1e12); // Conversion H/s → TH/s
+
+            const ctx = document.getElementById('hashrateChart').getContext('2d');
+            new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: labels,
+                datasets: [{
+                  label: 'Hashrate (TH/s)',
+                  data: hashrates,
+                  borderColor: '#f7931a',
+                  backgroundColor: 'rgba(247, 147, 26, 0.2)',
+                  borderWidth: 2,
+                  pointRadius: 2,
+                  fill: true,
+                  tension: 0.4
+                }]
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    title: {
+                      display: true,
+                      text: 'TH/s'
+                    }
+                  },
+                  x: {
+                    title: {
+                      display: true,
+                      text: 'Date'
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+          })
+          .catch(err => {
+            console.error("Erreur chargement hashrate :", err);
+          });
+      }
+
+      // Appeler la fonction au chargement
+      loadHashrateGraph();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const canvas = document.getElementById("embers");
+      const ctx = canvas.getContext("2d");
+      let particles = [];
+    
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    
+      window.addEventListener("resize", resize);
+      resize();
+    
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+    
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = canvas.height + Math.random() * 100;
+          this.size = Math.random() * 2 + 1;
+          this.speed = Math.random() * 1 + 0.5;
+          this.alpha = Math.random() * 0.5 + 0.3;
+          this.color = `rgba(255, ${Math.floor(Math.random() * 100 + 50)}, 0, ${this.alpha})`;
+        }
+    
+        update() {
+          this.y -= this.speed;
+          if (this.y < -10) this.reset();
+        }
+    
+        draw() {
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    
+      for (let i = 0; i < 20; i++) {
+        particles.push(new Particle());
+      }
+    
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let p of particles) {
+          p.update();
+          p.draw();
+        }
+        requestAnimationFrame(animate);
+      }
+    
+      animate();
+    </script>
+  </body>
+</html>
