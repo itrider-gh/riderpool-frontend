@@ -2,397 +2,448 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Participez au minage Bitcoin en France avec notre pool communautaire. Un projet de chauffage intelligent utilisant la chaleur du minage pour chauffer." />
-    <meta property="og:title" content="Chauffage & Bitcoin - Pool de minage FR" />
-    <meta property="og:description" content="Pool Bitcoin française utilisant la chaleur du minage pour le chauffage." />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chauffage & Bitcoin – Pool de minage communautaire française</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Participez au minage Bitcoin en France avec notre pool communautaire. On valorise la chaleur du minage pour le chauffage. 0% de frais." />
+    <link rel="canonical" href="https://chauffagistes-pool.fr/" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:title" content="Chauffagistes – Pool Bitcoin FR (0% fees)" />
+    <meta property="og:description" content="Pool communautaire française. Minage Bitcoin + valorisation de chaleur pour le chauffage. Rejoignez-nous !" />
     <meta property="og:image" content="https://chauffagistes-pool.fr/logo.jpg" />
     <meta property="og:url" content="https://chauffagistes-pool.fr" />
-    <title>Chauffage & Bitcoin - Pool de minage communautaire française</title>
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <link rel="icon" href="logo.jpg" type="image/jpeg" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
     <style>
-      body {
-        background-color: #0d0d0d;
-        color: #fff;
-        font-family: 'Inter', sans-serif;
-        text-align: center;
+      :root{
+        --bg:#0d0d0d; --fg:#fff; --muted:#b9b9b9; --orange:#f7931a; --card:#131313; --border:#2a2a2a;
+        --good:#1aa179; --bad:#c43c3c; --link:#ffb25d;
       }
-      .navbar-brand {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      .navbar-brand img {
-        width: 40px;
-        border-radius: 8px;
-      }
-      .section {
-        padding: 2rem 1rem; /* AVANT c'était 4rem => maintenant 2rem */
-      }
-      .section-title {
-        color: #f7931a;
-        margin-bottom: 1.5rem; /* Un peu moins de marge */
-        border-bottom: 1px solid #f7931a44;
-        padding-bottom: 0.5rem;
-      }
-      code {
-        background: #333;
-        padding: 0.2rem 0.5rem;
-        border-radius: 6px;
-        color: #f7931a;
-      }
-      footer {
-        text-align: center;
-        padding: 2rem 1rem;
-        color: #aaa;
-        font-size: 0.9rem;
-      }
-      .social-icons a {
-        color: #f7931a;
-        margin: 0 10px;
-        font-size: 1.5rem;
-      }
-      .hashrate-header {
-        color: #f7931a;
-        font-size: 0.9rem;
-        margin-left: 1rem;
-        white-space: nowrap;
-      }
-      .responsive-logo {
-        max-width: 200px;   /* taille maximale sur grand écran */
-        width: 100%;        /* s'adapte à la taille du parent */
-        height: auto;       /* conserve le ratio largeur/hauteur */
-        border-radius: 12px;
-      }
-      #embers {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-        pointer-events: none;
-        background: transparent;
-      }
+      html,body{background:var(--bg); color:var(--fg); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+      a{ color:var(--link) }
+      .navbar-dark{ background:#0f0f0f !important; border-bottom:1px solid var(--border)}
+      .navbar-brand img{ width:40px; height:40px; object-fit:cover; border-radius:8px }
+      .section{ padding:2rem 1rem }
+      .section-title{ color:var(--orange); border-bottom:1px solid #f7931a44; padding-bottom:.5rem; margin-bottom:1.25rem }
+      .card-dark{ background:var(--card); border:1px solid var(--border); border-radius:14px }
+      .pill{ display:inline-flex; align-items:center; gap:.45rem; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:#161616; color:#eee; font-size:.85rem }
+      .pill.good{ border-color:#17483b; background:#0f3228; color:#c6fff0 }
+      .pill.bad{ border-color:#4a1e1e; background:#341414; color:#ffc6c6 }
+      .muted{ color:var(--muted) }
+      code{ background:#222; color:var(--orange); padding:.25rem .5rem; border-radius:8px; user-select:all }
+      .btn, .form-control{ border-radius:10px }
+      .responsive-logo{ max-width:200px; width:100%; height:auto; border-radius:12px }
+      .kpi{ text-align:center }
+      .kpi .label{ color:var(--muted); font-size:.85rem }
+      .kpi .value{ font-weight:700; font-size:1.15rem }
+      .grid{ display:grid; gap:12px }
+      @media (min-width: 768px){ .grid-cols-4{ grid-template-columns:repeat(4,1fr)} .grid-cols-3{ grid-template-columns:repeat(3,1fr)} }
+      #embers{ position:fixed; inset:0; z-index:-1; pointer-events:none; background:transparent }
+      .statusbar{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; justify-content:center }
+      @media (min-width: 768px){ .statusbar{ justify-content:flex-start } }
+      .d-grid-cta{ display:grid; gap:.6rem; }
+      .text-center-md-start{ text-align:center; }
+      @media (min-width: 768px){ .text-center-md-start{ text-align:left; } }
     </style>
-    
   </head>
   <body>
-    <canvas id="embers"></canvas>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <canvas id="embers" aria-hidden="true"></canvas>
+
+    <!-- NAV -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
       <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="#">
           <img src="logo.jpg" alt="Logo Chauffagistes" />
           <div class="d-flex flex-column align-items-start ms-2">
             <strong>Chauffagistes</strong>
-            <small id="hashrateHeader" class="text-warning" style="font-size: 0.7rem;">Hashrate : ...</small>
+            <small id="hashrateHeader" class="text-warning" style="font-size:.7rem">Hashrate : –</small>
           </div>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Ouvrir le menu">
           <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse justify-content-end text-center" id="navbarNav">
           <ul class="navbar-nav">
-            <li class="nav-item">
-              <a class="nav-link" href="#public">Pool publique</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#private">Minage privé</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#don">Donations</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#discord">Communauté</a>
-            </li>
+            <li class="nav-item"><a class="nav-link" href="#public">Pool publique</a></li>
+            <li class="nav-item"><a class="nav-link" href="#private">Minage privé</a></li>
+            <li class="nav-item"><a class="nav-link" href="#don">Donations</a></li>
+            <li class="nav-item"><a class="nav-link" href="#fournisseur">Fournisseur</a></li>
+            <li class="nav-item"><a class="nav-link" href="#discord">Communauté</a></li>
+            <li class="nav-item"><a class="nav-link" href="public-stats.html">Statistiques</a></li>
           </ul>
         </div>
       </div>
     </nav>
 
     <main class="container">
+      <!-- HERO -->
       <section class="section">
-        <h2 class="section-title">La pool Bitcoin communautaire française</h2>
-        <p>
-          Projet communautaire français de minage <strong>Bitcoin</strong>, visant aussi à valoriser la chaleur dégagée par les machines pour le <strong>chauffage</strong>. Une manière innovante de contribuer à la décentralisation du réseau tout en réchauffant intelligemment.
-        </p>
-        <div class="mt-3">
-          <i class="fas fa-map-marker-alt text-warning"></i> <span class="ms-1">France</span>
-        </div>
-        <div class="mt-4">
-          <img src="logo.gif" alt="Logo Chauffagistes" class="responsive-logo" />
+        <div class="row g-3 align-items-center">
+          <div class="col-lg-7 text-center-md-start">
+            <h1 class="h3 text-warning m-0">La pool Bitcoin communautaire française</h1>
+            <p class="mt-2">
+              Projet FR de minage <strong>Bitcoin</strong> à <strong>0% de frais</strong>, avec valorisation de la chaleur
+              pour le <strong>chauffage</strong>. Contribuez à la décentralisation tout en réchauffant utilement.
+            </p>
+            <div class="statusbar mt-2">
+              <span class="pill" id="pillUpdated">Maj: –</span>
+              <span class="pill">Utilisateurs <strong id="pillUsers">–</strong></span>
+              <span class="pill">Workers <strong id="pillWorkers">–</strong></span>
+              <span class="pill good">Acceptés <strong id="pillAccepted">–</strong></span>
+              <span class="pill bad">Rejetés <strong id="pillRejected">–</strong></span>
+              <span class="pill" id="pillRejectRate">Rejet: –</span>
+            </div>
+
+            <!-- CTA: boutons empilés -->
+            <div class="d-grid-cta mt-3">
+              <a href="#public" class="btn btn-warning w-100">🚀 Rejoindre la pool</a>
+              <a href="public-stats.html" class="btn btn-outline-light w-100">📊 Voir les statistiques publiques</a>
+              <a href="#discord" class="btn btn-outline-warning w-100">💬 Rejoindre le Discord</a>
+            </div>
+          </div>
+          <div class="col-lg-5 text-center">
+            <img src="logo.gif" alt="Logo animé Chauffagistes" class="responsive-logo" />
+          </div>
         </div>
       </section>
 
+      <!-- BLOC STATS RAPIDES -->
+      <section class="section">
+        <h3 class="section-title text-center">Statut de la pool</h3>
+        <div class="grid grid-cols-4">
+          <div class="card-dark p-3 kpi">
+            <div class="label">Hashrate (1h)</div>
+            <div class="value" id="kpiHr1h">–</div>
+          </div>
+          <div class="card-dark p-3 kpi">
+            <div class="label">Hashrate (1j)</div>
+            <div class="value" id="kpiHr1d">–</div>
+          </div>
+          <div class="card-dark p-3 kpi">
+            <div class="label">SPS (1h)</div>
+            <div class="value" id="kpiSps1h">–</div>
+          </div>
+          <div class="card-dark p-3 kpi">
+            <div class="label">Best share</div>
+            <div class="value" id="kpiBestShare">–</div>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+          <div class="col-12">
+            <div class="card-dark p-3">
+              <h5 class="text-warning mb-2 text-center text-md-start">Historique du hashrate</h5>
+              <canvas id="hashrateChart" style="max-height:300px" aria-label="Historique hashrate"></canvas>
+              <div class="muted small mt-1 text-center text-md-start">Unité : TH/s (moyennes journalières)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- JOIN GUIDE -->
       <section id="public" class="section">
-        <h3 class="section-title">Accès à la pool publique</h3>
-        <p>
-          La pool est publique et rejoignable en solo mining via :<br />
-          <code>stratum+tcp://chauffagistes-pool.fr:3333</code>
-        </p>
-        <p>
-          Utilisez le format <code>adresse_btc.worker</code> avec le mot de passe <code>x</code>.
-        </p>
-        <div id="pool-info">
-          <p>Chargement des données de la pool...</p>
-        </div>
+        <h3 class="section-title text-center">Accès à la pool publique</h3>
+        <ol class="text-start mx-auto" style="max-width:920px">
+          <li class="mb-2">
+            Configurez votre mineur (ou proxy stratum) :
+            <div class="card-dark p-3 mt-2">
+              <div class="mb-1">URL stratum :</div>
+              <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center justify-content-md-start">
+                <code id="confUrl">stratum+tcp://chauffagistes-pool.fr:3333</code>
+                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('confUrl').innerText)">Copier</button>
+              </div>
+              <div class="mt-3 mb-1">Identifiant (user/pass) :</div>
+              <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center justify-content-md-start">
+                <code id="confUser">adresse_btc.worker</code>
+                <code id="confPass">x</code>
+                <button class="btn btn-sm btn-outline-light" onclick="copyText('adresse_btc.worker:x')">Copier</button>
+              </div>
+            </div>
+          </li>
+          <li class="mb-2">
+            Vérifiez votre adresse sur la page <a href="public-stats.html">Statistiques</a> (recherche utilisateur).
+          </li>
+          <li>
+            Besoin d’aide ? Rejoignez le <a href="#discord">Discord</a>.
+          </li>
+        </ol>
 
-        <div class="mt-4">
-          <a href="https://chauffagistes-pool.fr/public-stats.html" class="btn btn-outline-warning">
-            📊 Voir toutes les statistiques
-          </a>
-        </div>
-
-        <div class="mt-5">
-          <canvas id="hashrateChart" style="max-width: 100%; max-height: 300px;"></canvas>
+        <div class="d-grid-cta mt-3 mx-auto" style="max-width:420px">
+          <a href="public-stats.html" class="btn btn-outline-warning w-100">📈 Ouvrir les Statistiques publiques</a>
         </div>
       </section>
 
+      <!-- PRIVÉ -->
       <section id="private" class="section">
-        <h3 class="section-title">Minage mutualisé (section privée)</h3>
-        <p>
-          Une section privée avec minage mutualisé et dashboard est disponible.<br />
-          Elle est accessible sous conditions via le serveur Discord.
-        </p>
-        <a
-          href="https://swakraft.hopto.org/chauffagistes"
-          class="btn btn-warning"
-          target="_blank"
-        >
-          Accéder au Dashboard privé
-        </a>
+        <h3 class="section-title text-center">Minage mutualisé (section privée)</h3>
+        <p class="text-center">Section privée avec minage mutualisé et dashboard (accès via Discord, sous conditions).</p>
+        <div class="d-grid-cta mx-auto" style="max-width:420px">
+          <a href="https://swakraft.hopto.org/chauffagistes" class="btn btn-warning w-100" target="_blank" rel="noopener">Accéder au dashboard privé</a>
+        </div>
       </section>
 
+      <!-- FOURNISSEUR PRÉFÉRÉ -->
+      <section id="fournisseur" class="section">
+        <h3 class="section-title text-center">Fournisseur préféré des Chauffagistes</h3>
+        <div class="card-dark p-3">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+              <p class="mb-2">
+                Matériel et accessoires recommandés chez
+                <a href="https://silexperience.company.site/" target="_blank" rel="noopener">Silexperience</a>.
+              </p>
+              <ul class="mb-2">
+                <li>Catalogue orienté mining & intégrations chauffage</li>
+                <li>Avantage communauté : <strong>-5%</strong> avec le code promo <code>CHAUFFAGISTES</code></li>
+              </ul>
+              <a class="btn btn-outline-warning" href="https://silexperience.company.site/" target="_blank" rel="noopener">🛒 Visiter Silexperience</a>
+            </div>
+            <div class="col-md-4 text-center">
+              <img src="logo.jpg" alt="Chauffagistes" class="responsive-logo" />
+              <div class="muted small mt-2">Code promo : <code>CHAUFFAGISTES</code> (–5%)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DONATIONS -->
       <section id="don" class="section">
-        <h3 class="section-title">Financement & Frais</h3>
-        <p>
-          La pool prend <strong>0% de frais</strong> et fonctionne grâce aux dons de la communauté.
-        </p>
-        <p>🟠 Donation via Bitcoin (on-chain) :</p>
-        <button
-          class="btn btn-outline-warning mb-2"
-          onclick="copyToClipboard('bc1qkt3n2yzu0kxlm72hhhx9vnxge8zhr5k2q4zc6l')"
-        >
-          Copier l'adresse Bitcoin
-        </button>
-
-        <p>⚡ Donation via Lightning :</p>
-        <button
-          class="btn btn-outline-warning"
-          onclick="copyToClipboard('chauffagistes@walletofsatoshi.com')"
-        >
-          Copier l'adresse Lightning
-        </button>
+        <h3 class="section-title text-center">Financement & Frais</h3>
+        <p class="text-center">La pool prend <strong>0% de frais</strong> et fonctionne grâce aux dons de la communauté.</p>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="card-dark p-3">
+              <h5 class="text-warning text-center text-md-start">Bitcoin (on-chain)</h5>
+              <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center justify-content-md-start">
+                <code id="addrBTC">bc1qkt3n2yzu0kxlm72hhhx9vnxge8zhr5k2q4zc6l</code>
+                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('addrBTC').innerText)">Copier</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-dark p-3">
+              <h5 class="text-warning text-center text-md-start">Lightning</h5>
+              <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center justify-content-md-start">
+                <code id="addrLN">chauffagistes@walletofsatoshi.com</code>
+                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('addrLN').innerText)">Copier</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-
+      <!-- CHAUFFAGE -->
       <section class="section">
-        <h3 class="section-title">Minage & Chauffage : une synergie</h3>
-        <p>
-          Le nom "Chauffagistes" n’est pas anodin : en réutilisant la chaleur produite par les équipements de minage <strong>Bitcoin</strong>, il est possible d’en faire un usage utile pour le <strong>chauffage</strong> domestique ou collectif. C’est une piste explorée par plusieurs membres de la communauté, notamment en France.
+        <h3 class="section-title text-center">Minage & Chauffage : une synergie</h3>
+        <p class="text-center text-md-start">
+          Le nom “Chauffagistes” n’est pas anodin : en réutilisant la chaleur produite par le minage <strong>Bitcoin</strong>,
+          on peut chauffer des locaux (domestiques ou collectifs) tout en sécurisant le réseau. Plusieurs membres testent déjà des intégrations en France.
         </p>
       </section>
 
+      <!-- COMMUNAUTÉ -->
       <section id="discord" class="section">
-        <h3 class="section-title">Communauté</h3>
-        <p>
-          Le meilleur moyen de rejoindre la communauté, poser des questions ou contribuer au projet, c’est le serveur Discord :
-        </p>
-        <a
-          class="btn btn-primary"
-          href="https://discord.gg/5s9xfbZPBR"
-          target="_blank"
-        >
-          Rejoindre le Discord
-        </a>
+        <h3 class="section-title text-center">Communauté</h3>
+        <p class="text-center">Le meilleur moyen d’échanger et contribuer au projet est notre serveur Discord.</p>
+        <div class="d-grid-cta mx-auto" style="max-width:420px">
+          <a class="btn btn-primary w-100" href="https://discord.gg/5s9xfbZPBR" target="_blank" rel="noopener">Rejoindre le Discord</a>
+        </div>
       </section>
     </main>
 
-    <footer>
-      <div class="social-icons mb-2">
-        <a href="https://discord.gg/5s9xfbZPBR" target="_blank" aria-label="Discord">
+    <footer class="text-center py-4">
+      <div class="mb-2">
+        <a href="https://discord.gg/5s9xfbZPBR" target="_blank" rel="noopener" aria-label="Discord" class="me-2">
           <i class="fab fa-discord"></i>
         </a>
-        <a href="https://x.com/Chauff_pool" target="_blank" aria-label="Twitter">
+        <a href="https://x.com/Chauff_pool" target="_blank" rel="noopener" aria-label="X (Twitter)" class="me-2">
           <i class="fab fa-x-twitter"></i>
         </a>
+        <a href="https://bitbucket.org/ckolivas/workspace/projects/CKPOOL" target="_blank" rel="noopener" aria-label="ckpool (Bitbucket)">
+          <i class="fab fa-bitbucket"></i>
+        </a>
       </div>
-      © 2025 Chauffagistes Pool – Made with ❤️ en France
-      <a href="/mentions-legales.html" class="text-decoration-none text-warning">Mentions légales</a>
-
+      <div class="muted">
+        © 2025 Chauffagistes Pool – Made with ❤️ en France —
+        <a href="/mentions-legales.html" class="text-decoration-none">Mentions légales</a>
+      </div>
     </footer>
 
+    <!-- Charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
-      function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert("Adresse copiée : " + text);
-        });
-      }
+      const API = "https://chauffagistes-pool.fr:3000/api";
 
-      function formatWithUnit(value) {
-        if (typeof value !== 'number') return value;
-        const units = ['', 'K', 'M', 'G', 'T', 'P'];
-        let unitIndex = 0;
-        while (value >= 1000 && unitIndex < units.length - 1) {
-          value /= 1000;
-          unitIndex++;
+      // Utils (même logique que sur la page Stats)
+      const fmt = {
+        compact(n){
+          if(n===undefined||n===null||isNaN(n)) return "–";
+          const u=["","K","M","G","T","P","E"]; let i=0;
+          while(n>=1000 && i<u.length-1){ n/=1000; i++; }
+          return n.toFixed(2).replace('.',',') + " " + u[i]; // conserve l'espace pour K/M/G/T (pas H/s)
+        },
+        percent(v){ if(!isFinite(v)) return "–"; return (v*100).toFixed(2).replace('.',',')+" %"; },
+        timeAgo(ts){
+          if(!ts) return "–";
+          const d=new Date(ts*1000), diff=(Date.now()-d)/1000;
+          if(diff<60) return Math.floor(diff)+"s";
+          if(diff<3600) return Math.floor(diff/60)+"m";
+          if(diff<86400) return Math.floor(diff/3600)+"h";
+          return d.toLocaleString('fr-FR');
+        },
+        // Affichage hashrate identique à la page Stats
+        hashrate(v){ 
+          if (v === undefined || v === null) return "–";
+          return formatAnyHashrate(v);
         }
-        return value.toFixed(2) + units[unitIndex];
+      };
+
+      // === Fonctions de formatage identiques à la page Stats ===
+      function parseHashrateToUnit(hps){
+        const units = ["H/s","KH/s","MH/s","GH/s","TH/s","PH/s","EH/s"];
+        let i = 0;
+        let v = Number(hps) || 0;
+        while (v >= 1000 && i < units.length - 1) { v /= 1000; i++; }
+        return `${v.toFixed(2).replace('.',',')} ${units[i]}`;
+      }
+      function parseHashrate(strOrNum){
+        if(typeof strOrNum === "number") return strOrNum; // déjà en H/s
+        if(typeof strOrNum !== "string") return 0;
+        const m = strOrNum.trim().match(/^([\d.,]+)\s*([HKMGTP])?$/i);
+        if(!m) return 0;
+        const num = parseFloat(m[1].replace(',', '.'));
+        const unit=(m[2]||'H').toUpperCase();
+        const map={H:1, K:1e3, M:1e6, G:1e9, T:1e12, P:1e15};
+        return num*(map[unit]||1);
+      }
+      function formatAnyHashrate(v){
+        const hps = (typeof v === "number") ? v : parseHashrate(v);
+        return parseHashrateToUnit(hps); // -> "42,00 TH/s"
       }
 
-      fetch("https://chauffagistes-pool.fr:3000/api/pool")
-        .then(res => res.json())
-        .then(pool => {
-          const runtime = pool.runtime;
-          const hashrate = pool.hashrates?.hashrate1hr || "–";
-          const accepted = pool.shares?.accepted?.toLocaleString("fr-FR") || "–";
-          const rejected = pool.shares?.rejected?.toLocaleString("fr-FR") || "–";
-          const sps = pool.shares?.SPS1h || "–";
-          const bestshare = formatWithUnit(pool.shares?.bestshare || 0);
+      function copyText(t){ navigator.clipboard?.writeText(t); }
 
-          const html = `
-            <h4 class="text-warning">Statistiques Pool</h4>
-            <ul class="list-unstyled">
-              <li><strong>Hashrate 1h :</strong> ${hashrate}</li>
-              <li><strong>Shares acceptés :</strong> ${accepted}</li>
-              <li><strong>Shares rejetés :</strong> ${rejected}</li>
-              <li><strong>Shares/s (SPS) :</strong> ${sps}</li>
-              <li><strong>Best share :</strong> ${bestshare}</li>
-              <li><strong>Utilisateurs connectés :</strong> ${runtime.Users}</li>
-              <li><strong>Workers actifs :</strong> ${runtime.Workers}</li>
-            </ul>
-          `;
-          document.getElementById("pool-info").innerHTML = html;
-
-          // ➔ Remplir le hashrate dans le header :
-          document.getElementById("hashrateHeader").innerText = "Hashrate : " + hashrate;
-        })
-        .catch(err => {
-          console.error("Erreur de récupération de la pool :", err);
-          document.getElementById("pool-info").innerHTML = "<p class='text-danger'>Erreur de chargement des données.</p>";
-          document.getElementById("hashrateHeader").innerText = "Hashrate : –";
-        });
-
-      // Fonction pour charger l'historique du hashrate et afficher un graphique
-      function loadHashrateGraph() {
-        fetch("https://chauffagistes-pool.fr:3000/api/hashrate")
-          .then(res => res.json())
-          .then(data => {
-            if (!data.length) {
-              console.warn("Aucune donnée pour le graphique");
-              return;
-            }
-
-            const labels = data.map(point => point.date);
-            const hashrates = data.map(point => point.hashrate / 1e12); // Conversion H/s → TH/s
-
-            const ctx = document.getElementById('hashrateChart').getContext('2d');
-            new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: labels,
-                datasets: [{
-                  label: 'Hashrate (TH/s)',
-                  data: hashrates,
-                  borderColor: '#f7931a',
-                  backgroundColor: 'rgba(247, 147, 26, 0.2)',
-                  borderWidth: 2,
-                  pointRadius: 2,
-                  fill: true,
-                  tension: 0.4
-                }]
-              },
-              options: {
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    title: {
-                      display: true,
-                      text: 'TH/s'
-                    }
-                  },
-                  x: {
-                    title: {
-                      display: true,
-                      text: 'Date'
-                    }
-                  }
-                },
-                plugins: {
-                  legend: {
-                    display: false
-                  }
-                }
-              }
-            });
-          })
-          .catch(err => {
-            console.error("Erreur chargement hashrate :", err);
+      // Chart init (seulement l'historique hashrate)
+      let hrChart;
+      function ensureCharts(){
+        const hc = document.getElementById('hashrateChart').getContext('2d');
+        if(!hrChart){
+          hrChart = new Chart(hc, {
+            type:'line',
+            data:{ labels:[], datasets:[{ label:'Hashrate (TH/s)', data:[], fill:true, tension:.35, borderWidth:2 }]},
+            options:{ plugins:{ legend:{ display:false }}, scales:{ y:{ title:{display:true,text:'TH/s'}}, x:{ title:{display:true,text:'Date'} } } }
           });
+        }
       }
 
-      // Appeler la fonction au chargement
-      loadHashrateGraph();
+      // Fetch Pool status
+      async function loadPool(){
+        try{
+          const r = await fetch(`${API}/pool`);
+          const pool = await r.json();
+
+          const runtime = pool.runtime || {};
+          const hr = pool.hashrates || {};
+          const sh = pool.shares || {};
+
+          // Header + pills (hashrate avec "H/s")
+          document.getElementById("hashrateHeader").innerText =
+            "Hashrate : " + fmt.hashrate(hr.hashrate1hr ?? "–");
+
+          document.getElementById("pillUsers").innerText = runtime.Users ?? "–";
+          document.getElementById("pillWorkers").innerText = runtime.Workers ?? "–";
+          document.getElementById("pillAccepted").innerText = fmt.compact(sh.accepted||0);
+          document.getElementById("pillRejected").innerText = fmt.compact(sh.rejected||0);
+          document.getElementById("pillUpdated").innerText = "Maj: " + fmt.timeAgo(runtime.lastupdate);
+
+          const total = (sh.accepted||0)+(sh.rejected||0);
+          const rejRate = total ? (sh.rejected/total) : NaN;
+          document.getElementById("pillRejectRate").innerHTML = (rejRate<=0.02)
+            ? `Rejet: <span class="pill good">${fmt.percent(rejRate)}</span>`
+            : `Rejet: <span class="pill bad">${fmt.percent(rejRate)}</span>`;
+
+          // KPIs (hashrates avec "H/s")
+          document.getElementById("kpiHr1h").innerText = fmt.hashrate(hr.hashrate1hr ?? "–");
+          document.getElementById("kpiHr1d").innerText = fmt.hashrate(hr.hashrate1d ?? "–");
+          document.getElementById("kpiSps1h").innerText = sh.SPS1h ?? "–";
+          document.getElementById("kpiBestShare").innerText = fmt.compact(sh.bestshare||0);
+        }catch(e){
+          console.error("Erreur pool:", e);
+        }
+      }
+
+      // Fetch History
+      async function loadHistory(){
+        try{
+          const r = await fetch(`${API}/hashrate`);
+          const data = await r.json();
+          ensureCharts();
+          const labels = data.map(p=>p.date);
+          const series = data.map(p=> (p.hashrate/1e12)); // TH/s
+          hrChart.data.labels = labels;
+          hrChart.data.datasets[0].data = series;
+          hrChart.update();
+        }catch(e){
+          console.error("Erreur history:", e);
+        }
+      }
+
+      // Auto-refresh
+      let timer=null;
+      function startRefresh(){
+        if(timer) clearInterval(timer);
+        timer = setInterval(()=>{ loadPool(); }, 30000);
+      }
+
+      // Embers BG (respect reduced motion)
+      (function embers(){
+        const canvas = document.getElementById("embers");
+        const ctx = canvas.getContext("2d");
+        let parts=[]; const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+        addEventListener("resize", resize); resize();
+        class P{ constructor(){ this.reset(); }
+          reset(){ this.x=Math.random()*canvas.width; this.y=canvas.height+Math.random()*100; this.size=Math.random()*2+1; this.speed=Math.random()*1+0.5; this.alpha=Math.random()*0.5+0.3; this.color=`rgba(255, ${Math.floor(Math.random()*100+50)}, 0, ${this.alpha})`; }
+          update(){ this.y-=this.speed; if(this.y<-10) this.reset(); }
+          draw(){ ctx.beginPath(); ctx.fillStyle=this.color; ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); }
+        }
+        const count = prefersReduced ? 0 : 20;
+        for(let i=0;i<count;i++) parts.push(new P());
+        function anim(){ ctx.clearRect(0,0,canvas.width,canvas.height); for(const p of parts){ p.update(); p.draw(); } requestAnimationFrame(anim); }
+        anim();
+      })();
+
+      // Bind
+      function selectOnClick(el){ el.addEventListener('click', ()=>{ const r=document.createRange(); r.selectNodeContents(el); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }); }
+      ['confUrl','confUser','confPass','addrBTC','addrLN'].forEach(id=>{ const el=document.getElementById(id); if(el) selectOnClick(el); });
+      window.copyText = copyText;
+
+      // Init
+      ensureCharts();
+      Promise.all([loadPool(), loadHistory()]).then(startRefresh);
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      const canvas = document.getElementById("embers");
-      const ctx = canvas.getContext("2d");
-      let particles = [];
-    
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-    
-      window.addEventListener("resize", resize);
-      resize();
-    
-      class Particle {
-        constructor() {
-          this.reset();
-        }
-    
-        reset() {
-          this.x = Math.random() * canvas.width;
-          this.y = canvas.height + Math.random() * 100;
-          this.size = Math.random() * 2 + 1;
-          this.speed = Math.random() * 1 + 0.5;
-          this.alpha = Math.random() * 0.5 + 0.3;
-          this.color = `rgba(255, ${Math.floor(Math.random() * 100 + 50)}, 0, ${this.alpha})`;
-        }
-    
-        update() {
-          this.y -= this.speed;
-          if (this.y < -10) this.reset();
-        }
-    
-        draw() {
-          ctx.beginPath();
-          ctx.fillStyle = this.color;
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-    
-      for (let i = 0; i < 20; i++) {
-        particles.push(new Particle());
-      }
-    
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (let p of particles) {
-          p.update();
-          p.draw();
-        }
-        requestAnimationFrame(animate);
-      }
-    
-      animate();
+
+    <!-- JSON-LD Organization (SEO) -->
+    <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"WebSite",
+      "name":"Chauffagistes Pool",
+      "url":"https://chauffagistes-pool.fr",
+      "description":"Pool Bitcoin communautaire française (0% fees) valorisant la chaleur du minage.",
+      "publisher":{ "@type":"Organization", "name":"Chauffagistes Pool", "logo":{"@type":"ImageObject","url":"https://chauffagistes-pool.fr/logo.jpg"} }
+    }
     </script>
   </body>
 </html>

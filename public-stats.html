@@ -2,61 +2,179 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Statistiques Pool - Chauffagistes</title>
-    <link rel="icon" href="logo.jpg" type="image/jpeg" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="icon" href="logo.jpg" type="image/jpeg"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <style>
-      body {
-        background-color: #0d0d0d;
-        color: #fff;
-        font-family: 'Inter', sans-serif;
+      :root {
+        --bg: #0d0d0d;
+        --fg: #ffffff;
+        --muted:#b9b9b9;
+        --orange:#f7931a;
+        --card:#131313;
+        --border:#2a2a2a;
+        --good:#1aa179;
+        --bad:#c43c3c;
       }
-      .section-title {
-        color: #f7931a;
-        border-bottom: 1px solid #f7931a44;
-        padding-bottom: 0.5rem;
-        margin-top: 2rem;
-      }
-      .text-orange {
-        color: #f7931a;
-      }
-      .form-control, .btn {
-        border-radius: 6px;
-      }
+      body { background-color: var(--bg); color: var(--fg); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+      .section-title { color: var(--orange); border-bottom: 1px solid #f7931a44; padding-bottom:.5rem; margin-top:2rem; }
+      .text-orange{color:var(--orange)}
+      .kpi { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px 14px; height:100%;}
+      .kpi .label{color:var(--muted); font-size:.9rem}
+      .kpi .value{font-weight:700; font-size:1.25rem}
+      .card-dark{ background:var(--card); border:1px solid var(--border); border-radius:14px; }
+      .pill{ display:inline-flex; gap:.35rem; align-items:center; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:#161616; color:#eee; font-size:.85rem}
+      .pill.good{ border-color: #17483b; background:#0f3228; color:#c6fff0}
+      .pill.bad{ border-color: #4a1e1e; background:#341414; color:#ffc6c6}
+      .btn, .form-control{ border-radius:10px}
+      .table-dark { --bs-table-bg: #0f0f0f; --bs-table-striped-bg:#141414; --bs-table-border-color:#232323; }
+      .muted{ color:var(--muted)}
+      .tiny{ font-size:.85rem }
+      .spark{ width:100%; height:6px; border-radius:999px; background:linear-gradient(90deg, #2b2b2b, #2b2b2b); position:relative; overflow:hidden}
+      .spark .fill{ position:absolute; height:100%; left:0; top:0; background:var(--orange)}
+      .loader{opacity:.6}
+      .pointer{cursor:pointer}
+      .chart-wrap{ padding:12px }
     </style>
   </head>
   <body class="container py-4">
-    <h1 class="text-center text-orange">Statistiques de la Pool Chauffagistes</h1>
+    <header class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="text-orange h3 m-0">Statistiques de la Pool Chauffagistes</h1>
+      <div class="d-flex align-items-center gap-2">
+        <span class="pill" id="freshnessPill">Maj: –</span>
+        <button id="refreshBtn" class="btn btn-sm btn-outline-warning">↻ Actualiser</button>
+      </div>
+    </header>
 
-    <section>
-      <h2 class="section-title">Statistiques Globales (Pool)</h2>
-      <div id="poolStats">Chargement...</div>
-    </section>
-
-    <section>
-      <h2 class="section-title">Top Utilisateurs</h2>
-      <div class="row">
-        <div class="col-md-6">
-          <h5 class="text-orange">Top Hashrate</h5>
-          <ul id="topHashrate" class="list-unstyled"></ul>
+    <!-- Bandeau runtime / effectifs -->
+    <section class="mb-3">
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <div class="kpi">
+            <div class="label">Uptime</div>
+            <div class="value" id="uptime">–</div>
+          </div>
         </div>
-        <div class="col-md-6">
-          <h5 class="text-orange">Top Best Share</h5>
-          <ul id="topBestShares" class="list-unstyled"></ul>
+        <div class="col-6 col-md-3">
+          <div class="kpi">
+            <div class="label">Dernière mise à jour</div>
+            <div class="value" id="lastupdate">–</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-2">
+          <div class="kpi">
+            <div class="label">Utilisateurs</div>
+            <div class="value" id="users">–</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-2">
+          <div class="kpi">
+            <div class="label">Workers</div>
+            <div class="value"><span id="workers">–</span> <span class="tiny muted">(actifs&nbsp;<span id="workersActive">–</span>)</span></div>
+          </div>
+        </div>
+        <div class="col-6 col-md-2">
+          <div class="kpi">
+            <div class="label">État</div>
+            <div class="d-flex gap-2 mt-1">
+              <span class="pill good">Idle <span id="idle">–</span></span>
+              <span class="pill bad">Disco <span id="disco">–</span></span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Hashrates -->
     <section>
-      <h2 class="section-title">Historique Hashrate</h2>
-      <canvas id="hashrateChart" style="max-height: 300px;"></canvas>
+      <h2 class="section-title">Hashrate (Pool)</h2>
+      <div class="row g-3">
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">1 min</div><div class="value" id="hr1m">–</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">5 min</div><div class="value" id="hr5m">–</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">15 min</div><div class="value" id="hr15m">–</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">1 h</div><div class="value" id="hr1h">–</div><div class="spark mt-2"><div id="spark1h" class="fill" style="width:0%"></div></div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">6 h</div><div class="value" id="hr6h">–</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">1 j</div><div class="value" id="hr1d">–</div></div></div>
+        <div class="col-6 col-md-3"><div class="kpi"><div class="label">7 j</div><div class="value" id="hr7d">–</div></div></div>
+      </div>
     </section>
 
+    <!-- Shares + charts -->
+    <section>
+      <h2 class="section-title">Shares & Qualité</h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card-dark p-3 h-100">
+            <ul class="m-0">
+              <li>Acceptés : <strong id="sharesAccepted">–</strong></li>
+              <li>Rejetés : <strong id="sharesRejected">–</strong></li>
+              <li>Taux de rejet : <strong id="rejectRate">–</strong></li>
+              <li>Best share : <strong id="bestShare">–</strong></li>
+              <li>Diff actuelle : <strong id="diff">–</strong></li>
+            </ul>
+            <div class="chart-wrap"><canvas id="donutShares"></canvas></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card-dark p-3 h-100">
+            <div class="mb-2">Shares / sec (SPS)</div>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="pill">1m: <span id="sps1m">–</span></span>
+              <span class="pill">5m: <span id="sps5m">–</span></span>
+              <span class="pill">15m: <span id="sps15m">–</span></span>
+              <span class="pill">1h: <span id="sps1h">–</span></span>
+            </div>
+            <div class="chart-wrap"><canvas id="barSPS"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leaderboards -->
+    <section>
+      <h2 class="section-title">Leaderboards</h2>
+      <div class="row g-3">
+        <div class="col-lg-6">
+          <div class="card-dark p-3">
+            <h5 class="text-orange mb-2">Top Hashrate (1h)</h5>
+            <ul id="topHashrate" class="list-unstyled m-0"></ul>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card-dark p-3">
+            <h5 class="text-orange mb-2">Top Best Share</h5>
+            <ul id="topBestShares" class="list-unstyled m-0"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Historique -->
+    <section>
+      <h2 class="section-title">Historique Hashrate</h2>
+      <div class="card-dark p-3">
+        <canvas id="hashrateChart" style="max-height:300px;"></canvas>
+        <div class="tiny muted mt-2">Unité: TH/s (moyennes journalières)</div>
+      </div>
+    </section>
+
+    <!-- Recherche utilisateur -->
     <section>
       <h2 class="section-title">Rechercher un utilisateur</h2>
-      <input type="text" id="btcInput" class="form-control" placeholder="Entrer votre adresse BTC" />
-      <button onclick="searchUser()" class="btn btn-warning mt-2">Voir mes stats</button>
+      <div class="row g-2 align-items-center">
+        <div class="col-md-6">
+          <input type="text" id="btcInput" class="form-control" placeholder="Entrer une adresse BTC"/>
+        </div>
+        <div class="col-6 col-md-auto d-flex gap-2">
+          <button id="btnSearch" class="btn btn-warning">Voir mes stats</button>
+          <button id="btnCopy" class="btn btn-outline-light" title="Copier l'adresse">Copier</button>
+        </div>
+        <div class="col-6 col-md-auto form-check ms-2">
+          <input class="form-check-input" type="checkbox" id="hideZero" checked>
+          <label class="form-check-label" for="hideZero">Masquer workers à 0</label>
+        </div>
+      </div>
       <div id="userStats" class="mt-4"></div>
     </section>
 
@@ -64,162 +182,308 @@
     <script>
       const apiBase = "https://chauffagistes-pool.fr:3000/api";
 
-      function formatHashrate(hs) {
-        if (!hs) return "–";
-        const units = ["H", "K", "M", "G", "T", "P"];
+      // ---------- Utils ----------
+      const fmt = {
+        number(n){ if(n===undefined||n===null||isNaN(n)) return "–";
+          return n.toLocaleString('fr-FR'); },
+        compact(n){ if(n===undefined||n===null||isNaN(n)) return "–";
+          const units=["","K","M","G","T","P","E"];
+          let i=0; while(n>=1000 && i<units.length-1){ n/=1000; i++; }
+          return n.toFixed(2).replace('.',',') + units[i];
+        },
+        hashrate(v){
+          if (v === undefined || v === null) return "–";
+          return formatAnyHashrate(v);
+        },
+        bestShare(n){ return fmt.compact(n); },
+        percent(v){ if(v===undefined||v===null||isNaN(v)) return "–"; return (v*100).toFixed(2).replace('.',',')+" %"; },
+        timeAgo(ts){ // ts in seconds epoch
+          if(!ts) return "–";
+          const d = new Date(ts*1000);
+          const diff = (Date.now()-d.getTime())/1000;
+          if(diff<60) return "il y a "+Math.floor(diff)+"s";
+          if(diff<3600) return "il y a "+Math.floor(diff/60)+"m";
+          if(diff<86400) return "il y a "+Math.floor(diff/3600)+"h";
+          return d.toLocaleString('fr-FR');
+        },
+        uptime(sec){
+          if(!sec && sec!==0) return "–";
+          const d = Math.floor(sec/86400);
+          const h = Math.floor((sec%86400)/3600);
+          const m = Math.floor((sec%3600)/60);
+          return `${d}j ${h}h ${m}m`;
+        }
+      };
+
+      function parseHashrateToUnit(hps){
+        const units = ["H/s","KH/s","MH/s","GH/s","TH/s","PH/s","EH/s"];
         let i = 0;
-        while (hs >= 1000 && i < units.length - 1) {
-          hs /= 1000;
-          i++;
+        let v = Number(hps) || 0;
+        while (v >= 1000 && i < units.length - 1) { v /= 1000; i++; }
+        return `${v.toFixed(2).replace('.',',')} ${units[i]}`;
+      }
+
+      function parseHashrate(strOrNum){
+        if(typeof strOrNum === "number") return strOrNum; // already H/s
+        if(typeof strOrNum !== "string") return 0;
+        const m = strOrNum.trim().match(/^([\d.]+)\s*([HKMGTP])?$/i);
+        if(!m) return 0;
+        const num = parseFloat(m[1]);
+        const unit=(m[2]||'H').toUpperCase();
+        const map={H:1, K:1e3, M:1e6, G:1e9, T:1e12, P:1e15};
+        return num*map[unit];
+      }
+
+      function setFreshPill(ts){
+        const pill = document.getElementById("freshnessPill");
+        pill.textContent = `Maj: ${fmt.timeAgo(ts)}`;
+      }
+
+      // ---------- Charts ----------
+      let chartHashrate, chartDonut, chartSPS;
+
+      function ensureCharts(){
+        const ctxH = document.getElementById('hashrateChart').getContext('2d');
+        const ctxD = document.getElementById('donutShares').getContext('2d');
+        const ctxB = document.getElementById('barSPS').getContext('2d');
+
+        if(!chartHashrate){
+          chartHashrate = new Chart(ctxH, {
+            type:'line', data:{ labels:[], datasets:[{ label:'Hashrate (TH/s)', data:[], borderWidth:2, tension:.3, fill:true }]},
+            options:{ plugins:{legend:{display:false}}, scales:{ y:{ title:{display:true, text:'TH/s'}}, x:{ title:{display:true, text:'Date'}}}}
+          });
         }
-        return hs.toFixed(2) + "" + units[i];
-      }
-
-      function loadPoolStats() {
-        fetch(`${apiBase}/pool`)
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById("poolStats").innerHTML = `
-              <ul>
-                <li>Hashrate 1h : ${data.hashrates?.hashrate1hr || "–"}</li>
-                <li>Shares acceptés : ${formatNumberUnit(data.shares?.accepted)}</li>
-                <li>Shares rejetés : ${formatNumberUnit(data.shares?.rejected)}</li>
-                <li>SPS 1h : ${data.shares?.SPS1h || "–"}</li>
-                <li>Best share : ${formatNumberUnit(data.shares?.bestshare)}</li>
-              </ul>
-            `;
+        if(!chartDonut){
+          chartDonut = new Chart(ctxD, {
+            type:'doughnut', data:{ labels:['Acceptés','Rejetés'], datasets:[{ data:[0,0] }] },
+            options:{ plugins:{legend:{position:'bottom'}}, cutout:'70%'}
           });
-      }
-
-      function loadTopStats() {
-        fetch(`${apiBase}/top`)
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById("topHashrate").innerHTML = data.topHashrate.map(u =>
-              `<li>${u.address} (${u.workerCount} workers) – ${formatHashrate(u.totalHashrate1hr)}</li>`
-            ).join("");
-            document.getElementById("topBestShares").innerHTML = data.topBestShares.map(u =>
-              `<li>${u.address} (${u.workerCount} workers) – ${formatNumberUnit(u.bestshare)}</li>`
-            ).join("");
-          });
-      }
-
-      function loadHashrateGraph() {
-        fetch(`${apiBase}/hashrate`)
-          .then(res => res.json())
-          .then(data => {
-            const labels = data.map(point => point.date);
-            const hashrates = data.map(point => point.hashrate / 1e12);
-            new Chart(document.getElementById('hashrateChart'), {
-              type: 'line',
-              data: {
-                labels,
-                datasets: [{
-                  label: 'Hashrate (TH/s)',
-                  data: hashrates,
-                  borderColor: '#f7931a',
-                  backgroundColor: 'rgba(247,147,26,0.2)',
-                  fill: true,
-                  tension: 0.4
-                }]
-              },
-              options: {
-                scales: {
-                  y: { title: { display: true, text: 'TH/s' } },
-                  x: { title: { display: true, text: 'Date' } }
-                },
-                plugins: { legend: { display: false } }
-              }
-            });
-          });
-      }
-
-      function formatNumberUnit(value) {
-        if (!value || isNaN(value)) return "–";
-        const units = ["", "K", "M", "G", "T", "P"];
-        let unitIndex = 0;
-        while (value >= 1000 && unitIndex < units.length - 1) {
-            value /= 1000;
-            unitIndex++;
         }
-        return value.toFixed(2) + "" + units[unitIndex];
+        if(!chartSPS){
+          chartSPS = new Chart(ctxB, {
+            type:'bar', data:{ labels:['1m','5m','15m','1h'], datasets:[{ label:'SPS', data:[0,0,0,0]}]},
+            options:{ plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, title:{display:true,text:'Shares/s'}}}}
+          });
+        }
       }
 
-      function searchUser() {
+      // ---------- Fetchers ----------
+      async function loadPool(){
+        try{
+          const res = await fetch(`${apiBase}/pool`);
+          const data = await res.json();
+
+          // Runtime / counts
+          document.getElementById('uptime').textContent = fmt.uptime(data.runtime?.runtime);
+          document.getElementById('lastupdate').textContent = fmt.timeAgo(data.runtime?.lastupdate);
+          document.getElementById('users').textContent = fmt.number(data.runtime?.Users);
+          document.getElementById('workers').textContent = fmt.number(data.runtime?.Workers);
+          document.getElementById('idle').textContent = fmt.number(data.runtime?.Idle);
+          document.getElementById('disco').textContent = fmt.number(data.runtime?.Disconnected);
+          const active = (data.runtime?.Workers||0) - (data.runtime?.Idle||0) - (data.runtime?.Disconnected||0);
+          document.getElementById('workersActive').textContent = Math.max(active,0);
+
+          // Hashrates tiles
+          document.getElementById('hr1m').textContent = fmt.hashrate(data.hashrates?.hashrate1m);
+          document.getElementById('hr5m').textContent = fmt.hashrate(data.hashrates?.hashrate5m);
+          document.getElementById('hr15m').textContent = fmt.hashrate(data.hashrates?.hashrate15m);
+          document.getElementById('hr1h').textContent = fmt.hashrate(data.hashrates?.hashrate1hr);
+          document.getElementById('hr6h').textContent = fmt.hashrate(data.hashrates?.hashrate6hr);
+          document.getElementById('hr1d').textContent = fmt.hashrate(data.hashrates?.hashrate1d);
+          document.getElementById('hr7d').textContent = fmt.hashrate(data.hashrates?.hashrate7d);
+
+          // tiny spark vs 1h vs 1d
+          const hr1h = parseHashrate(data.hashrates?.hashrate1hr||0);
+          const hr1d = parseHashrate(data.hashrates?.hashrate1d||1);
+          const ratio = Math.min(100, Math.max(0, (hr1h / hr1d) * 50 + 50)); // centré 50%
+          document.getElementById('spark1h').style.width = `${isFinite(ratio)?ratio:0}%`;
+
+          // Shares
+          const acc = data.shares?.accepted || 0;
+          const rej = data.shares?.rejected || 0;
+          const total = acc + rej;
+          const rejRate = total ? (rej/total) : 0;
+
+          document.getElementById('sharesAccepted').textContent = fmt.compact(acc);
+          document.getElementById('sharesRejected').textContent = fmt.compact(rej);
+          document.getElementById('rejectRate').innerHTML = (rejRate < 0.02)
+              ? `<span class="pill good">${fmt.percent(rejRate)}</span>`
+              : `<span class="pill bad">${fmt.percent(rejRate)}</span>`;
+          document.getElementById('bestShare').textContent = fmt.bestShare(data.shares?.bestshare);
+          document.getElementById('diff').textContent = data.shares?.diff ?? "–";
+
+          // Charts
+          ensureCharts();
+          chartDonut.data.datasets[0].data = [acc, rej];
+          chartDonut.update();
+
+          chartSPS.data.datasets[0].data = [data.shares?.SPS1m||0, data.shares?.SPS5m||0, data.shares?.SPS15m||0, data.shares?.SPS1h||0];
+          chartSPS.update();
+
+          setFreshPill(data.runtime?.lastupdate);
+        }catch(e){
+          console.error(e);
+        }
+      }
+
+      function formatAnyHashrate(v){
+        // Prend un nombre (H/s) OU une chaîne style "967T" et renvoie "967,00 TH/s"
+        const hps = (typeof v === "number") ? v : parseHashrate(v);
+        return parseHashrateToUnit(hps);
+      }
+
+      async function loadTop(){
+        try{
+          const res = await fetch(`${apiBase}/top`);
+          const data = await res.json();
+
+          // Top Hashrate
+          document.getElementById("topHashrate").innerHTML = (data.topHashrate || []).map(u=>{
+            // totalHashrate1hr est numérique en H/s dans ton API → on formate proprement
+            const hrStr = formatAnyHashrate(u.totalHashrate1hr);
+            return `<li class="mb-1">
+              <span class="pill">${escapeHtml(u.address)}</span>
+              <span class="muted">(${u.workerCount} wkr)</span>
+              – <strong>${hrStr}</strong>
+            </li>`;
+          }).join("");
+
+          // Top BestShares
+          document.getElementById("topBestShares").innerHTML = data.topBestShares.map(u=>{
+            return `<li class="mb-1"><span class="pill">${escapeHtml(u.address)}</span> <span class="muted">(${u.workerCount} wkr)</span> – <strong>${fmt.bestShare(u.bestshare)}</strong></li>`;
+          }).join("");
+        }catch(e){ console.error(e); }
+      }
+
+      async function loadHistory(){
+        try{
+          const res = await fetch(`${apiBase}/hashrate`);
+          const data = await res.json();
+          ensureCharts();
+          const labels = data.map(p=>p.date);
+          const series = data.map(p=>(p.hashrate/1e12)); // TH/s
+          chartHashrate.data.labels = labels;
+          chartHashrate.data.datasets[0].data = series;
+          chartHashrate.update();
+        }catch(e){ console.error(e); }
+      }
+
+      // ---------- User Search ----------
+      async function searchUser(){
         const addr = document.getElementById("btcInput").value.trim();
-        if (!addr) return alert("Adresse requise");
+        if(!addr) return alert("Adresse requise");
 
-        fetch(`${apiBase}/stats/${addr}`)
-            .then(res => res.ok ? res.json() : Promise.reject("Introuvable"))
-            .then(data => {
-            // Trier les workers par hashrate1d décroissant
-            const sortedWorkers = [...data.workers].sort((a, b) => {
-                const ha = parseHashrate(b.hashrate1d || "0");
-                const hb = parseHashrate(a.hashrate1d || "0");
-                return ha - hb;
-            });
+        const hideZero = document.getElementById("hideZero").checked;
+        const btn = document.getElementById('btnSearch');
+        btn.disabled = true; btn.classList.add("loader");
 
-            const html = `
-                <h4 class="text-orange">${data.address}</h4>
-                <p>Workers : ${data.globalStats.workers}</p>
-                <ul>
-                <li>Hashrate 1d : ${data.globalStats.hashrate1d}</li>
-                <li>Shares : ${formatNumberUnit(data.globalStats.shares)}</li>
-                <li>Best share : ${formatNumberUnit(data.globalStats.bestshare)}</li>
-                </ul>
+        try{
+          const res = await fetch(`${apiBase}/stats/${addr}`);
+          if(!res.ok) throw new Error("Introuvable");
+          const data = await res.json();
 
-                <h5 class="mt-3">Détails des Workers (triés par hashrate)</h5>
-                <table class="table table-dark table-striped table-bordered table-sm">
-                <thead>
-                    <tr>
-                    <th>Nom</th>
-                    <th>Hashrate 1d</th>
-                    <th>Shares</th>
-                    <th>Best share</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${sortedWorkers.map(w => {
-                    const name = w.workername.split('.').pop();
-                    return `
-                        <tr>
-                        <td>${name}</td>
-                        <td>${w.hashrate1hr || "–"}</td>
-                        <td>${formatNumberUnit(w.shares)}</td>
-                        <td>${formatNumberUnit(w.bestshare)}</td>
-                        </tr>
-                    `;
-                    }).join("")}
-                </tbody>
-                </table>
+          // Tri par hashrate1d décroissant
+          const workers = [...data.workers].sort((a,b)=> parseHashrate(b.hashrate1d||"0") - parseHashrate(a.hashrate1d||"0"));
+          const filtered = hideZero ? workers.filter(w => parseHashrate(w.hashrate1hr||"0")>0 || (w.shares||0)>0) : workers;
+
+          const rows = filtered.map(w=>{
+            const name = (w.workername||"").split('.').pop();
+            return `
+              <tr>
+                <td class="tiny">${escapeHtml(name)}</td>
+                <td>${escapeHtml(w.hashrate1m||"–")}</td>
+                <td>${escapeHtml(w.hashrate5m||"–")}</td>
+                <td>${escapeHtml(w.hashrate1hr||"–")}</td>
+                <td>${escapeHtml(w.hashrate1d||"–")}</td>
+                <td>${fmt.compact(w.shares||0)}</td>
+                <td>${fmt.compact(w.bestshare||0)}</td>
+              </tr>
             `;
-            document.getElementById("userStats").innerHTML = html;
-            })
-            .catch(err => {
-            document.getElementById("userStats").innerHTML = `<p class="text-danger">Adresse non trouvée</p>`;
-            });
-        }
+          }).join("");
 
-      function parseHashrate(value) {
-        if (typeof value !== "string") return 0;
-        const unit = value.slice(-1).toUpperCase();
-        const number = parseFloat(value);
-        if (isNaN(number)) return 0;
+          const rejRate = (data.globalStats?.shares || 0) ? null : null; // placeholder if needed later
 
-        switch (unit) {
-            case 'H': return number;
-            case 'K': return number * 1e3;
-            case 'M': return number * 1e6;
-            case 'G': return number * 1e9;
-            case 'T': return number * 1e12;
-            case 'P': return number * 1e15;
-            default: return number;
+          const html = `
+            <div class="card-dark p-3">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h4 class="text-orange m-0">${escapeHtml(data.address)}</h4>
+                <button class="btn btn-sm btn-outline-light" onclick="copyText('${escapeAttr(data.address)}')">Copier</button>
+              </div>
+              <div class="row g-3 mt-1">
+                <div class="col-6 col-md-3"><div class="kpi"><div class="label">Workers</div><div class="value">${fmt.number(data.globalStats.workers)}</div></div></div>
+                <div class="col-6 col-md-3"><div class="kpi"><div class="label">Hashrate 1h</div><div class="value">${escapeHtml(data.globalStats.hashrate1hr)}</div></div></div>
+                <div class="col-6 col-md-3"><div class="kpi"><div class="label">Shares</div><div class="value">${fmt.compact(data.globalStats.shares)}</div></div></div>
+                <div class="col-6 col-md-3"><div class="kpi"><div class="label">Best share</div><div class="value">${fmt.bestShare(data.globalStats.bestshare)}</div></div></div>
+              </div>
+
+              <h5 class="mt-3">Détails des Workers</h5>
+              <div class="table-responsive">
+                <table class="table table-dark table-striped table-bordered table-sm align-middle">
+                  <thead>
+                    <tr>
+                      <th class="pointer" onclick="sortUserTable(0)">Nom</th>
+                      <th class="pointer" onclick="sortUserTable(1)">HR 1m</th>
+                      <th class="pointer" onclick="sortUserTable(2)">HR 5m</th>
+                      <th class="pointer" onclick="sortUserTable(3)">HR 1h</th>
+                      <th class="pointer" onclick="sortUserTable(4)">HR 1j</th>
+                      <th class="pointer" onclick="sortUserTable(5)">Shares</th>
+                      <th class="pointer" onclick="sortUserTable(6)">Best share</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userWorkersBody">
+                    ${rows || '<tr><td colspan="7" class="text-center muted">Aucun worker</td></tr>'}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+          document.getElementById("userStats").innerHTML = html;
+        }catch(err){
+          document.getElementById("userStats").innerHTML = `<p class="text-danger">Adresse non trouvée</p>`;
+        }finally{
+          btn.disabled = false; btn.classList.remove("loader");
         }
       }
 
-      loadPoolStats();
-      loadTopStats();
-      loadHashrateGraph();
+      // simple client-side sort for user table (by textual or numeric hashrate)
+      function sortUserTable(colIndex){
+        const body = document.getElementById('userWorkersBody');
+        if(!body) return;
+        const rows = Array.from(body.querySelectorAll('tr'));
+        const sorted = rows.sort((ra, rb)=>{
+          const a = ra.children[colIndex]?.textContent.trim() || "";
+          const b = rb.children[colIndex]?.textContent.trim() || "";
+          // numeric compare for hashrate / shares / best share columns
+          if(colIndex>=1){
+            const na = (colIndex<=4) ? parseHashrate(a) : (colIndex===5 ? parseFloat(a.replace(/\D/g,'')) : parseFloat(a.replace(/\D/g,'')));
+            const nb = (colIndex<=4) ? parseHashrate(b) : (colIndex===5 ? parseFloat(b.replace(/\D/g,'')) : parseFloat(b.replace(/\D/g,'')));
+            return (nb||0) - (na||0);
+          }
+          return a.localeCompare(b, 'fr');
+        });
+        body.innerHTML = ""; sorted.forEach(r=>body.appendChild(r));
+      }
+
+      // ---------- History / refresh ----------
+      let refreshTimer = null;
+      function startAutoRefresh(){
+        if(refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(()=>{ loadPool(); loadTop(); }, 30000);
+      }
+
+      // ---------- Misc helpers ----------
+      function escapeHtml(s){ return (s??"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+      function escapeAttr(s){ return escapeHtml(s).replace(/\n/g,''); }
+      function copyText(txt){ navigator.clipboard?.writeText(txt); }
+
+      // ---------- Bindings ----------
+      document.getElementById('refreshBtn').addEventListener('click', ()=>{ loadPool(); loadTop(); });
+      document.getElementById('btnSearch').addEventListener('click', searchUser);
+      document.getElementById('btnCopy').addEventListener('click', ()=> copyText(document.getElementById('btcInput').value.trim() ) );
+
+      // initial load
+      ensureCharts();
+      Promise.all([loadPool(), loadTop(), loadHistory()]).then(startAutoRefresh);
     </script>
   </body>
 </html>
