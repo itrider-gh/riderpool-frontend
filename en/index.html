@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Heating & Bitcoin – French Community Mining Pool</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Join Bitcoin mining in France with our community pool. We reuse mining heat for heating. 0% fees." />
+    <link rel="canonical" href="https://chauffagistes-pool.fr/en/" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:title" content="Chauffagistes – Bitcoin Pool FR (0% fees)" />
+    <meta property="og:description" content="French community pool. Bitcoin mining + heat recovery for heating. Join us!" />
+    <meta property="og:image" content="https://chauffagistes-pool.fr/logo.jpg" />
+    <meta property="og:url" content="https://chauffagistes-pool.fr/en/" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="logo.jpg" type="image/jpeg" />
+
+    <link rel="alternate" hreflang="fr" href="https://chauffagistes-pool.fr/" />
+    <link rel="alternate" hreflang="en" href="https://chauffagistes-pool.fr/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://chauffagistes-pool.fr/" />
+
+
+    <!-- Vendor CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <!-- App CSS -->
+    <link rel="stylesheet" href="../app.css" />
+  </head>
+  <body>
+    <canvas id="embers" aria-hidden="true"></canvas>
+
+    <!-- NAV -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+          <img src="../logo.jpg" alt="Chauffagistes Logo" />
+          <div class="d-flex flex-column align-items-start ms-2">
+            <strong>Chauffagistes</strong>
+            <small id="hashrateHeader" class="text-warning" style="font-size:.7rem">Hashrate: –</small>
+          </div>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Open menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="status-leds flex-wrap justify-content-center justify-content-lg-end my-2 my-lg-0 me-lg-3">
+          <span id="stProxy"   class="status-item" title="Proxy">
+            <span class="led"></span><span class="label">Proxy</span><span class="state">–</span>
+          </span>
+          <span id="stPrimary" class="status-item" title="Primary Stratum">
+            <span class="led"></span><span class="label">Primary</span><span class="state">–</span>
+          </span>
+          <span id="stBackup"  class="status-item" title="Backup Stratum">
+            <span class="led"></span><span class="label">Backup</span><span class="state">–</span>
+          </span>
+        </div>
+
+        <div class="collapse navbar-collapse justify-content-end text-center" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="#solo">Solo mining</a></li>
+            <li class="nav-item"><a class="nav-link" href="#private">Private mining</a></li>
+            <li class="nav-item"><a class="nav-link" href="#don">Donations</a></li>
+            <li class="nav-item"><a class="nav-link" href="#partner">Partner</a></li>
+            <li class="nav-item"><a class="nav-link" href="#discord">Community</a></li>
+            <li class="nav-item"><a class="nav-link" href="public-stats.html">Statistics</a></li>
+          </ul>
+          <ul class="navbar-nav ms-lg-3">
+            <li class="nav-item d-flex align-items-center gap-2">
+                <a class="nav-link lang-link active" href="/" lang="fr" hreflang="fr" aria-current="page" aria-label="Français">
+                <!-- Drapeau FR -->
+                <span class="flag" aria-hidden="true">
+                    <svg viewBox="0 0 3 2" width="18" height="12" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="1" height="2" x="0" y="0" fill="#0055A4"/>
+                    <rect width="1" height="2" x="1" y="0" fill="#FFFFFF"/>
+                    <rect width="1" height="2" x="2" y="0" fill="#EF4135"/>
+                    </svg>
+                </span>
+                FR
+                </a>
+            </li>
+            </ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <!-- HERO -->
+      <section class="section">
+        <div class="row g-3 align-items-center">
+          <div class="col-lg-7 text-center-md-start">
+            <h1 class="h3 text-warning m-0">The French Community Bitcoin Pool</h1>
+            <p class="mt-2">
+              A French <strong>Bitcoin</strong> mining project with <strong>0% fees</strong>, reusing heat
+              for <strong>heating</strong>. Contribute to decentralization while making heat useful.
+            </p>
+            <div class="statusbar mt-2">
+              <span class="pill" id="pillUpdated">Updated: –</span>
+              <span class="pill">Users <strong id="pillUsers">–</strong></span>
+              <span class="pill">Workers <strong id="pillWorkers">–</strong></span>
+              <span class="pill good">Accepted <strong id="pillAccepted">–</strong></span>
+              <span class="pill bad">Rejected <strong id="pillRejected">–</strong></span>
+              <span class="pill" id="pillRejectRate">Reject rate: –</span>
+            </div>
+
+            <div class="d-grid-cta mt-3">
+              <a href="#solo" class="btn btn-warning w-100">🚀 Join the pool</a>
+              <a href="public-stats.html" class="btn btn-outline-light w-100">📊 View public stats</a>
+              <a href="#discord" class="btn btn-outline-warning w-100">💬 Join Discord</a>
+            </div>
+          </div>
+          <div class="col-lg-5 text-center">
+            <img src="../logo.webp" alt="Animated Chauffagistes Logo" class="responsive-logo" />
+          </div>
+        </div>
+      </section>
+
+      <!-- STATS -->
+      <section class="section">
+        <h3 class="section-title text-center">Pool status</h3>
+        <div class="grid grid-cols-4">
+          <div class="card-dark p-3 kpi">
+            <div class="label">Hashrate (1h)</div>
+            <div class="value" id="kpiHr1h">–</div>
+          </div>
+          <div class="card-dark p-3 kpi">
+            <div class="label">Hashrate (1d)</div>
+            <div class="value" id="kpiHr1d">–</div>
+          </div>
+          <div class="card-dark p-3 kpi">
+            <div class="label">SPS (1h)</div>
+            <div class="value" id="kpiSps1h">–</div>
+          </div>
+          <div class="card-dark p-3 kpi">
+            <div class="label">Best share</div>
+            <div class="value" id="kpiBestShare">–</div>
+          </div>
+        </div>
+        <div class="row g-3 mt-3">
+            <div class="col-12">
+                <div class="card-dark p-3">
+                <h5 class="text-warning mb-2 d-flex align-items-center justify-content-between flex-wrap">
+                    <span>Hashrate history</span>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="btn-group me-1" role="group" aria-label="History range">
+                        <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="7d">Week</button>
+                        <button type="button" class="btn btn-sm btn-outline-light btn-range active" data-range="30d">Month</button>
+                        <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="365d">Year</button>
+                        <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="all">All time</button>
+                    </div>
+
+                    <button
+                        id="toggleTopo"
+                        class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-2 topo-toggle"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#topologyCollapse"
+                        aria-expanded="false"
+                        aria-controls="topologyCollapse"
+                        title="Show/hide topology">
+                        Topology
+                        <span class="chevron" aria-hidden="true">▾</span>
+                    </button>
+                    </div>
+                </h5>
+
+                <!-- GRAPH -->
+                <canvas id="hashrateChart" style="max-height:300px" aria-label="Hashrate history"></canvas>
+                <div class="muted small mt-1 text-center text-md-start">Unit: TH/s (daily averages)</div>
+
+                <!-- TOPOLOGY -->
+                <div id="topologyCollapse" class="collapse">
+                    <div class="card-dark p-3 mt-3">
+                    <div class="d-flex justify-content-center mb-2 statusbar flex-wrap">
+                        <span class="pill">Total <strong id="pingTotal">–</strong></span>
+                        <span class="pill good">Online <strong id="pingOnline">–</strong></span>
+                        <span class="pill bad">Offline <strong id="pingOffline">–</strong></span>
+                    </div>
+
+                    <div class="net-wrap d-flex justify-content-center">
+                        <svg id="netSvg" viewBox="0 0 700 260" role="img" aria-label="Pool network diagram" style="transform: translateX(-70px);"></svg>
+                    </div>
+
+                    <div class="muted small mt-2 text-center">
+                        Links turn green if both nodes are online. Latencies in milliseconds (live).<br>
+                        Pings via <a href="https://github.com/2miners/stratum-ping" target="_blank" rel="noopener">stratum-ping</a> from the proxy in Roubaix (OVH).
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+      </section>
+
+      <!-- JOIN GUIDE -->
+      <section id="solo" class="section">
+        <h3 class="section-title text-center">Solo mining</h3>
+        <ol class="text-start mx-auto" style="max-width:920px">
+          <li class="mb-2">
+            Configure your miner (or stratum proxy):
+            <div class="card-dark p-3 mt-2">
+              <div class="mb-1">Stratum URL:</div>
+              <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center justify-content-md-start">
+                <code id="confUrl">stratum+tcp://chauffagistes-pool.fr:3333</code>
+                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('confUrl').innerText)">Copy</button>
+              </div>
+              <div class="mt-3 mb-1">Credentials (user/pass):</div>
+              <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center justify-content-md-start">
+                <code id="confUser">btc_address.worker</code>
+                <code id="confPass">x</code>
+                <button class="btn btn-sm btn-outline-light" onclick="copyText('btc_address.worker:x')">Copy</button>
+              </div>
+            </div>
+          </li>
+          <li class="mb-2">
+            Check your address on the <a href="public-stats.html">Statistics</a> page (search user).
+          </li>
+          <li>
+            Need help? Join our <a href="#discord">Discord</a>.
+          </li>
+        </ol>
+      </section>
+
+      <!-- PRIVATE -->
+      <section id="private" class="section">
+        <h3 class="section-title text-center">Private pool mining</h3>
+        <p class="text-center">Private section with pooled mining and dashboard (access via Discord, under conditions).</p>
+        <div class="d-grid-cta mx-auto" style="max-width:420px">
+          <a href="https://swakraft.hopto.org/chauffagistes" class="btn btn-warning w-100" target="_blank" rel="noopener">Access private dashboard</a>
+        </div>
+      </section>
+
+      <!-- PARTNER -->
+      <section id="partner" class="section">
+        <h3 class="section-title text-center">Preferred partner</h3>
+        <div class="card-dark p-3">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+              <p class="mb-2">
+                Recommended hardware and accessories at
+                <a href="https://silexperience.company.site/" target="_blank" rel="noopener">Silexperience</a>.
+              </p>
+              <ul class="mb-2">
+                <li>Catalog focused on mining & heat integration</li>
+                <li>Community discount: <strong>-5%</strong> with promo code <code>CHAUFFAGISTES</code></li>
+              </ul>
+              <a class="btn btn-outline-warning" href="https://silexperience.company.site/" target="_blank" rel="noopener">🛒 Visit Silexperience</a>
+            </div>
+            <div class="col-md-4 text-center">
+              <img src="../logo.jpg" alt="Chauffagistes" class="responsive-logo" />
+              <div class="muted small mt-2">Promo code: <code>CHAUFFAGISTES</code> (–5%)</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DONATIONS -->
+      <section id="don" class="section">
+        <h3 class="section-title text-center">Funding & Fees</h3>
+        <p class="text-center">The pool charges <strong>0% fees</strong> and runs thanks to community donations.</p>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="card-dark p-3">
+              <h5 class="text-warning text-center text-md-start">Bitcoin (on-chain)</h5>
+              <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center justify-content-md-start">
+                <code id="addrBTC">bc1qkt3n2yzu0kxlm72hhhx9vnxge8zhr5k2q4zc6l</code>
+                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('addrBTC').innerText)">Copy</button>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card-dark p-3">
+              <h5 class="text-warning text-center text-md-start">Lightning</h5>
+              <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center justify-content-md-start">
+                <code id="addrLN">chauffagistes@walletofsatoshi.com</code>
+                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('addrLN').innerText)">Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HEATING -->
+      <section class="section">
+        <h3 class="section-title text-center">Mining & Heating: a synergy</h3>
+        <p class="text-center text-md-start">
+          The name “Chauffagistes” is no coincidence: by reusing the heat generated from <strong>Bitcoin</strong> mining,
+          we can heat homes or collective spaces while securing the network. Several members are already testing integrations in France.
+        </p>
+      </section>
+
+      <!-- COMMUNITY -->
+      <section id="discord" class="section">
+        <h3 class="section-title text-center">Community</h3>
+        <p class="text-center">The best way to exchange and contribute to the project is through our Discord server.</p>
+        <div class="d-grid-cta mx-auto" style="max-width:420px">
+          <a class="btn btn-primary w-100" href="https://discord.gg/5s9xfbZPBR" target="_blank" rel="noopener">Join Discord</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="text-center py-4">
+      <div class="mb-2">
+        <a href="https://discord.gg/5s9xfbZPBR" target="_blank" rel="noopener" aria-label="Discord" class="me-2">
+          <i class="fab fa-discord"></i>
+        </a>
+        <a href="https://x.com/Chauff_pool" target="_blank" rel="noopener" aria-label="X (Twitter)" class="me-2">
+          <i class="fab fa-x-twitter"></i>
+        </a>
+        <a href="https://bitbucket.org/ckolivas/workspace/projects/CKPOOL" target="_blank" rel="noopener" aria-label="ckpool (Bitbucket)">
+          <i class="fab fa-bitbucket"></i>
+        </a>
+      </div>
+      <div class="muted">
+        © 2025 Chauffagistes Pool – Made with ❤️ in France — 
+        <a href="/mentions-legales.html" class="text-decoration-none">Legal notice</a>
+      </div>
+    </footer>
+
+    <!-- Vendor JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- App JS -->
+    <script src="../app.js"></script>
+
+    <!-- JSON-LD Organization (SEO) -->
+    <script type="application/ld+json">
+    {
+      "@context":"https://schema.org",
+      "@type":"WebSite",
+      "name":"Chauffagistes Pool",
+      "url":"https://chauffagistes-pool.fr/en/",
+      "description":"French community Bitcoin pool (0% fees) reusing mining heat.",
+      "publisher":{ "@type":"Organization", "name":"Chauffagistes Pool", "logo":{"@type":"ImageObject","url":"https://chauffagistes-pool.fr/logo.jpg"} }
+    }
+    </script>
+  </body>
+</html>

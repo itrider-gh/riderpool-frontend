@@ -18,40 +18,18 @@
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" href="logo.jpg" type="image/jpeg" />
+
+    <link rel="alternate" hreflang="fr" href="https://chauffagistes-pool.fr/" />
+    <link rel="alternate" hreflang="en" href="https://chauffagistes-pool.fr/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://chauffagistes-pool.fr/" />
+
+
+    <!-- Vendor CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 
-    <style>
-      :root{
-        --bg:#0d0d0d; --fg:#fff; --muted:#b9b9b9; --orange:#f7931a; --card:#131313; --border:#2a2a2a;
-        --good:#1aa179; --bad:#c43c3c; --link:#ffb25d;
-      }
-      html,body{background:var(--bg); color:var(--fg); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
-      a{ color:var(--link) }
-      .navbar-dark{ background:#0f0f0f !important; border-bottom:1px solid var(--border)}
-      .navbar-brand img{ width:40px; height:40px; object-fit:cover; border-radius:8px }
-      .section{ padding:2rem 1rem }
-      .section-title{ color:var(--orange); border-bottom:1px solid #f7931a44; padding-bottom:.5rem; margin-bottom:1.25rem }
-      .card-dark{ background:var(--card); border:1px solid var(--border); border-radius:14px }
-      .pill{ display:inline-flex; align-items:center; gap:.45rem; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:#161616; color:#eee; font-size:.85rem }
-      .pill.good{ border-color:#17483b; background:#0f3228; color:#c6fff0 }
-      .pill.bad{ border-color:#4a1e1e; background:#341414; color:#ffc6c6 }
-      .muted{ color:var(--muted) }
-      code{ background:#222; color:var(--orange); padding:.25rem .5rem; border-radius:8px; user-select:all }
-      .btn, .form-control{ border-radius:10px }
-      .responsive-logo{ max-width:200px; width:100%; height:auto; border-radius:12px }
-      .kpi{ text-align:center }
-      .kpi .label{ color:var(--muted); font-size:.85rem }
-      .kpi .value{ font-weight:700; font-size:1.15rem }
-      .grid{ display:grid; gap:12px }
-      @media (min-width: 768px){ .grid-cols-4{ grid-template-columns:repeat(4,1fr)} .grid-cols-3{ grid-template-columns:repeat(3,1fr)} }
-      #embers{ position:fixed; inset:0; z-index:-1; pointer-events:none; background:transparent }
-      .statusbar{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; justify-content:center }
-      @media (min-width: 768px){ .statusbar{ justify-content:flex-start } }
-      .d-grid-cta{ display:grid; gap:.6rem; }
-      .text-center-md-start{ text-align:center; }
-      @media (min-width: 768px){ .text-center-md-start{ text-align:left; } }
-    </style>
+    <!-- App CSS -->
+    <link rel="stylesheet" href="app.css" />
   </head>
   <body>
     <canvas id="embers" aria-hidden="true"></canvas>
@@ -71,15 +49,50 @@
           <span class="navbar-toggler-icon"></span>
         </button>
 
+        <div class="status-leds flex-wrap justify-content-center justify-content-lg-end my-2 my-lg-0 me-lg-3">
+          <span id="stProxy"   class="status-item" title="Proxy">
+            <span class="led"></span><span class="label">Proxy</span><span class="state">–</span>
+          </span>
+          <span id="stPrimary" class="status-item" title="Primary Stratum">
+            <span class="led"></span><span class="label">Primary</span><span class="state">–</span>
+          </span>
+          <span id="stBackup"  class="status-item" title="Backup Stratum">
+            <span class="led"></span><span class="label">Backup</span><span class="state">–</span>
+          </span>
+        </div>
+
         <div class="collapse navbar-collapse justify-content-end text-center" id="navbarNav">
           <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link" href="#public">Pool publique</a></li>
+            <li class="nav-item"><a class="nav-link" href="#solo">Solo mining</a></li>
             <li class="nav-item"><a class="nav-link" href="#private">Minage privé</a></li>
             <li class="nav-item"><a class="nav-link" href="#don">Donations</a></li>
             <li class="nav-item"><a class="nav-link" href="#fournisseur">Fournisseur</a></li>
             <li class="nav-item"><a class="nav-link" href="#discord">Communauté</a></li>
             <li class="nav-item"><a class="nav-link" href="public-stats.html">Statistiques</a></li>
           </ul>
+
+          <ul class="navbar-nav ms-lg-3">
+            <li class="nav-item d-flex align-items-center gap-2">
+              <a class="nav-link lang-link" href="/en/" lang="en" hreflang="en" aria-label="English">
+                <!-- Drapeau GB -->
+                <span class="flag" aria-hidden="true">
+                  <svg viewBox="0 0 60 30" width="18" height="9" xmlns="http://www.w3.org/2000/svg">
+                    <clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
+                    <clipPath id="t"><path d="M30,15 h30 v15 z v-30 z h-30 z h-30 z v30 z"/></clipPath>
+                    <g clip-path="url(#s)">
+                      <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+                      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
+                      <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#t)" stroke="#C8102E" stroke-width="4"/>
+                      <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
+                      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+                    </g>
+                  </svg>
+                </span>
+                EN
+              </a>
+            </li>
+          </ul>
+
         </div>
       </div>
     </nav>
@@ -103,15 +116,14 @@
               <span class="pill" id="pillRejectRate">Rejet: –</span>
             </div>
 
-            <!-- CTA: boutons empilés -->
             <div class="d-grid-cta mt-3">
-              <a href="#public" class="btn btn-warning w-100">🚀 Rejoindre la pool</a>
+              <a href="#solo" class="btn btn-warning w-100">🚀 Rejoindre la pool</a>
               <a href="public-stats.html" class="btn btn-outline-light w-100">📊 Voir les statistiques publiques</a>
               <a href="#discord" class="btn btn-outline-warning w-100">💬 Rejoindre le Discord</a>
             </div>
           </div>
           <div class="col-lg-5 text-center">
-            <img src="logo.gif" alt="Logo animé Chauffagistes" class="responsive-logo" />
+            <img src="logo.webp" alt="Logo animé Chauffagistes" class="responsive-logo" />
           </div>
         </div>
       </section>
@@ -141,17 +153,62 @@
         <div class="row g-3 mt-3">
           <div class="col-12">
             <div class="card-dark p-3">
-              <h5 class="text-warning mb-2 text-center text-md-start">Historique du hashrate</h5>
+              <h5 class="text-warning mb-2 d-flex align-items-center justify-content-between flex-wrap">
+                <span>Historique du hashrate</span>
+
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <div class="btn-group me-1" role="group" aria-label="Plage historique">
+                    <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="7d">Semaine</button>
+                    <button type="button" class="btn btn-sm btn-outline-light btn-range active" data-range="30d">Mois</button>
+                    <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="365d">Année</button>
+                    <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="all">All time</button>
+                  </div>
+
+                  <button
+                    id="toggleTopo"
+                    class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-2 topo-toggle"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#topologyCollapse"
+                    aria-expanded="false"
+                    aria-controls="topologyCollapse"
+                    title="Afficher/masquer la topologie">
+                    Topologie
+                    <span class="chevron" aria-hidden="true">▾</span>
+                  </button>
+                </div>
+              </h5>
+
               <canvas id="hashrateChart" style="max-height:300px" aria-label="Historique hashrate"></canvas>
               <div class="muted small mt-1 text-center text-md-start">Unité : TH/s (moyennes journalières)</div>
+
+              <div id="topologyCollapse" class="collapse">
+                <div class="card-dark p-3 mt-3">
+                  <div class="d-flex justify-content-center mb-2 statusbar flex-wrap">
+                    <span class="pill">Total <strong id="pingTotal">–</strong></span>
+                    <span class="pill good">En ligne <strong id="pingOnline">–</strong></span>
+                    <span class="pill bad">Hors ligne <strong id="pingOffline">–</strong></span>
+                  </div>
+
+                  <div class="net-wrap d-flex justify-content-center">
+                    <svg id="netSvg" viewBox="0 0 700 260" role="img" aria-label="Schéma réseau de la pool" style="transform: translateX(-70px);"></svg>
+                  </div>
+
+                  <div class="muted small mt-2 text-center">
+                    Les liens sont verts si les deux nœuds sont en ligne. Latences en millisecondes (live).<br>
+                    Pings effectués avec l'outil 
+                    <a href="https://github.com/2miners/stratum-ping" target="_blank" rel="noopener">stratum-ping</a>, depuis le proxy situé à Roubaix (OVH).
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <!-- JOIN GUIDE -->
-      <section id="public" class="section">
-        <h3 class="section-title text-center">Accès à la pool publique</h3>
+      <section id="solo" class="section">
+        <h3 class="section-title text-center">Solo mining</h3>
         <ol class="text-start mx-auto" style="max-width:920px">
           <li class="mb-2">
             Configurez votre mineur (ou proxy stratum) :
@@ -184,7 +241,7 @@
 
       <!-- PRIVÉ -->
       <section id="private" class="section">
-        <h3 class="section-title text-center">Minage mutualisé (section privée)</h3>
+        <h3 class="section-title text-center">Minage en mode pool</h3>
         <p class="text-center">Section privée avec minage mutualisé et dashboard (accès via Discord, sous conditions).</p>
         <div class="d-grid-cta mx-auto" style="max-width:420px">
           <a href="https://swakraft.hopto.org/chauffagistes" class="btn btn-warning w-100" target="_blank" rel="noopener">Accéder au dashboard privé</a>
@@ -273,166 +330,17 @@
         </a>
       </div>
       <div class="muted">
-        © 2025 Chauffagistes Pool – Made with ❤️ en France —
+        © 2025 Chauffagistes Pool – Made with ❤️ en France — 
         <a href="/mentions-legales.html" class="text-decoration-none">Mentions légales</a>
       </div>
     </footer>
 
-    <!-- Charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-      const API = "https://chauffagistes-pool.fr:3000/api";
-
-      // Utils (même logique que sur la page Stats)
-      const fmt = {
-        compact(n){
-          if(n===undefined||n===null||isNaN(n)) return "–";
-          const u=["","K","M","G","T","P","E"]; let i=0;
-          while(n>=1000 && i<u.length-1){ n/=1000; i++; }
-          return n.toFixed(2).replace('.',',') + " " + u[i]; // conserve l'espace pour K/M/G/T (pas H/s)
-        },
-        percent(v){ if(!isFinite(v)) return "–"; return (v*100).toFixed(2).replace('.',',')+" %"; },
-        timeAgo(ts){
-          if(!ts) return "–";
-          const d=new Date(ts*1000), diff=(Date.now()-d)/1000;
-          if(diff<60) return Math.floor(diff)+"s";
-          if(diff<3600) return Math.floor(diff/60)+"m";
-          if(diff<86400) return Math.floor(diff/3600)+"h";
-          return d.toLocaleString('fr-FR');
-        },
-        // Affichage hashrate identique à la page Stats
-        hashrate(v){ 
-          if (v === undefined || v === null) return "–";
-          return formatAnyHashrate(v);
-        }
-      };
-
-      // === Fonctions de formatage identiques à la page Stats ===
-      function parseHashrateToUnit(hps){
-        const units = ["H/s","KH/s","MH/s","GH/s","TH/s","PH/s","EH/s"];
-        let i = 0;
-        let v = Number(hps) || 0;
-        while (v >= 1000 && i < units.length - 1) { v /= 1000; i++; }
-        return `${v.toFixed(2).replace('.',',')} ${units[i]}`;
-      }
-      function parseHashrate(strOrNum){
-        if(typeof strOrNum === "number") return strOrNum; // déjà en H/s
-        if(typeof strOrNum !== "string") return 0;
-        const m = strOrNum.trim().match(/^([\d.,]+)\s*([HKMGTP])?$/i);
-        if(!m) return 0;
-        const num = parseFloat(m[1].replace(',', '.'));
-        const unit=(m[2]||'H').toUpperCase();
-        const map={H:1, K:1e3, M:1e6, G:1e9, T:1e12, P:1e15};
-        return num*(map[unit]||1);
-      }
-      function formatAnyHashrate(v){
-        const hps = (typeof v === "number") ? v : parseHashrate(v);
-        return parseHashrateToUnit(hps); // -> "42,00 TH/s"
-      }
-
-      function copyText(t){ navigator.clipboard?.writeText(t); }
-
-      // Chart init (seulement l'historique hashrate)
-      let hrChart;
-      function ensureCharts(){
-        const hc = document.getElementById('hashrateChart').getContext('2d');
-        if(!hrChart){
-          hrChart = new Chart(hc, {
-            type:'line',
-            data:{ labels:[], datasets:[{ label:'Hashrate (TH/s)', data:[], fill:true, tension:.35, borderWidth:2 }]},
-            options:{ plugins:{ legend:{ display:false }}, scales:{ y:{ title:{display:true,text:'TH/s'}}, x:{ title:{display:true,text:'Date'} } } }
-          });
-        }
-      }
-
-      // Fetch Pool status
-      async function loadPool(){
-        try{
-          const r = await fetch(`${API}/pool`);
-          const pool = await r.json();
-
-          const runtime = pool.runtime || {};
-          const hr = pool.hashrates || {};
-          const sh = pool.shares || {};
-
-          // Header + pills (hashrate avec "H/s")
-          document.getElementById("hashrateHeader").innerText =
-            "Hashrate : " + fmt.hashrate(hr.hashrate1hr ?? "–");
-
-          document.getElementById("pillUsers").innerText = runtime.Users ?? "–";
-          document.getElementById("pillWorkers").innerText = runtime.Workers ?? "–";
-          document.getElementById("pillAccepted").innerText = fmt.compact(sh.accepted||0);
-          document.getElementById("pillRejected").innerText = fmt.compact(sh.rejected||0);
-          document.getElementById("pillUpdated").innerText = "Maj: " + fmt.timeAgo(runtime.lastupdate);
-
-          const total = (sh.accepted||0)+(sh.rejected||0);
-          const rejRate = total ? (sh.rejected/total) : NaN;
-          document.getElementById("pillRejectRate").innerHTML = (rejRate<=0.02)
-            ? `Rejet: <span class="pill good">${fmt.percent(rejRate)}</span>`
-            : `Rejet: <span class="pill bad">${fmt.percent(rejRate)}</span>`;
-
-          // KPIs (hashrates avec "H/s")
-          document.getElementById("kpiHr1h").innerText = fmt.hashrate(hr.hashrate1hr ?? "–");
-          document.getElementById("kpiHr1d").innerText = fmt.hashrate(hr.hashrate1d ?? "–");
-          document.getElementById("kpiSps1h").innerText = sh.SPS1h ?? "–";
-          document.getElementById("kpiBestShare").innerText = fmt.compact(sh.bestshare||0);
-        }catch(e){
-          console.error("Erreur pool:", e);
-        }
-      }
-
-      // Fetch History
-      async function loadHistory(){
-        try{
-          const r = await fetch(`${API}/hashrate`);
-          const data = await r.json();
-          ensureCharts();
-          const labels = data.map(p=>p.date);
-          const series = data.map(p=> (p.hashrate/1e12)); // TH/s
-          hrChart.data.labels = labels;
-          hrChart.data.datasets[0].data = series;
-          hrChart.update();
-        }catch(e){
-          console.error("Erreur history:", e);
-        }
-      }
-
-      // Auto-refresh
-      let timer=null;
-      function startRefresh(){
-        if(timer) clearInterval(timer);
-        timer = setInterval(()=>{ loadPool(); }, 30000);
-      }
-
-      // Embers BG (respect reduced motion)
-      (function embers(){
-        const canvas = document.getElementById("embers");
-        const ctx = canvas.getContext("2d");
-        let parts=[]; const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-        addEventListener("resize", resize); resize();
-        class P{ constructor(){ this.reset(); }
-          reset(){ this.x=Math.random()*canvas.width; this.y=canvas.height+Math.random()*100; this.size=Math.random()*2+1; this.speed=Math.random()*1+0.5; this.alpha=Math.random()*0.5+0.3; this.color=`rgba(255, ${Math.floor(Math.random()*100+50)}, 0, ${this.alpha})`; }
-          update(){ this.y-=this.speed; if(this.y<-10) this.reset(); }
-          draw(){ ctx.beginPath(); ctx.fillStyle=this.color; ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); }
-        }
-        const count = prefersReduced ? 0 : 20;
-        for(let i=0;i<count;i++) parts.push(new P());
-        function anim(){ ctx.clearRect(0,0,canvas.width,canvas.height); for(const p of parts){ p.update(); p.draw(); } requestAnimationFrame(anim); }
-        anim();
-      })();
-
-      // Bind
-      function selectOnClick(el){ el.addEventListener('click', ()=>{ const r=document.createRange(); r.selectNodeContents(el); const s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }); }
-      ['confUrl','confUser','confPass','addrBTC','addrLN'].forEach(id=>{ const el=document.getElementById(id); if(el) selectOnClick(el); });
-      window.copyText = copyText;
-
-      // Init
-      ensureCharts();
-      Promise.all([loadPool(), loadHistory()]).then(startRefresh);
-    </script>
-
+    <!-- Vendor JS (Bootstrap + Chart.js) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- App JS -->
+    <script src="app.js"></script>
 
     <!-- JSON-LD Organization (SEO) -->
     <script type="application/ld+json">

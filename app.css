@@ -1,0 +1,65 @@
+:root{
+  --bg:#0d0d0d; --fg:#fff; --muted:#b9b9b9; --orange:#f7931a; --card:#131313; --border:#2a2a2a;
+  --good:#1aa179; --bad:#c43c3c; --link:#ffb25d;
+}
+html,body{background:var(--bg); color:var(--fg); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+a{ color:var(--link) }
+.navbar-dark{ background:#0f0f0f !important; border-bottom:1px solid var(--border)}
+.navbar-brand img{ width:40px; height:40px; object-fit:cover; border-radius:8px }
+.section{ padding:2rem 1rem }
+.section-title{ color:var(--orange); border-bottom:1px solid #f7931a44; padding-bottom:.5rem; margin-bottom:1.25rem }
+.card-dark{ background:var(--card); border:1px solid var(--border); border-radius:14px }
+.pill{ display:inline-flex; align-items:center; gap:.45rem; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--border); background:#161616; color:#eee; font-size:.85rem }
+.pill.good{ border-color:#17483b; background:#0f3228; color:#c6fff0 }
+.pill.bad{ border-color:#4a1e1e; background:#341414; color:#ffc6c6 }
+.muted{ color:var(--muted) }
+code{ background:#222; color:var(--orange); padding:.25rem .5rem; border-radius:8px; user-select:all }
+.btn, .form-control{ border-radius:10px }
+.responsive-logo{ max-width:200px; width:100%; height:auto; border-radius:12px }
+.kpi{ text-align:center }
+.kpi .label{ color:var(--muted); font-size:.85rem }
+.kpi .value{ font-weight:700; font-size:1.15rem }
+.grid{ display:grid; gap:12px }
+@media (min-width: 768px){
+  .grid-cols-4{ grid-template-columns:repeat(4,1fr)}
+  .grid-cols-3{ grid-template-columns:repeat(3,1fr)}
+}
+#embers{ position:fixed; inset:0; z-index:-1; pointer-events:none; background:transparent }
+.statusbar{ display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; justify-content:center }
+@media (min-width: 768px){ .statusbar{ justify-content:flex-start } }
+.d-grid-cta{ display:grid; gap:.6rem; }
+.text-center-md-start{ text-align:center; }
+@media (min-width: 768px){ .text-center-md-start{ text-align:left; } }
+
+/* Boutons de plage graphique */
+.btn-range { border-color:#5c5c5c; color:#eaeaea }
+.btn-range.active, .btn-range:focus { background: var(--orange); border-color: var(--orange); color:#111; }
+
+/* --- Topologie réseau (centrée + styles) --- */
+.net-wrap { display:flex; align-items:center; justify-content:center; }
+#netSvg { max-width:700px; width:100%; height:auto; display:block; }
+.net-link-ok   { stroke: var(--good);   stroke-width: 3; fill: none; }
+.net-link-bad  { stroke: var(--bad);    stroke-width: 3; fill: none; stroke-dasharray: 6 6; }
+.net-node rect { fill: #181818; stroke: var(--border); stroke-width: 1.5; rx: 12; }
+.net-node.online  rect { stroke: #1aa179; }
+.net-node.offline rect { stroke: #c43c3c; }
+.net-title { font-weight: 600; fill: #fff; font-size: 14px; }
+.net-sub   { fill: var(--muted); font-size: 12px; }
+
+/* --- Flèche toggle --- */
+.topo-toggle .chevron { display:inline-block; transition: transform .2s ease; }
+.topo-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+/* --- LEDs statut header --- */
+.status-leds{ display:flex; align-items:center; gap:10px }
+.status-item{ display:inline-flex; align-items:center; gap:6px; padding:.2rem .5rem; border:1px solid var(--border); border-radius:999px; background:#111; }
+.status-item .label{ font-size:.75rem; color:var(--muted) }
+.status-item .state{ font-size:.75rem; font-weight:700 }
+.led{ width:10px; height:10px; border-radius:50%; background:#444; display:inline-block }
+.led.online{ background:#1aa179; animation: ledPulse 1.2s ease-in-out infinite }
+.led.offline{ background:#c43c3c }
+@keyframes ledPulse{
+  0%{ opacity:.7; box-shadow:0 0 0 0 rgba(26,161,121,.6) }
+  70%{ opacity:1; box-shadow:0 0 8px 4px rgba(26,161,121,.2) }
+  100%{ opacity:.7; box-shadow:0 0 0 0 rgba(26,161,121,0) }
+}
