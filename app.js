@@ -137,6 +137,221 @@ async function loadPool(){
   }
 }
 
+// ====== Monthly Bests ======
+const MONTHLY_BESTS_API = `${API}/monthlyBests`;
+
+// Raccourci d'adresse lisible (bc1qabcd…xy)
+function shortenMiddle(str, start = 6, end = 2) {
+  if (!str || str.length <= start + end + 1) return str || "";
+  return str.slice(0, start) + "…" + str.slice(-end);
+}
+
+// Format "diff" en M / G / T / P (on évite K)
+function formatDiffUnits(val) {
+  if (val == null || !isFinite(Number(val))) return "–";
+  const v = Number(val);
+  const UNITS = [
+    { k: 1e15, s: "P" },
+    { k: 1e12, s: "T" },
+    { k: 1e9,  s: "G" },
+    { k: 1e6,  s: "M" },
+  ];
+  for (const u of UNITS) if (Math.abs(v) >= u.k) {
+    return (v / u.k).toFixed(2).replace(".", ",") + " " + u.s;
+  }
+  return String(v).replace(".", ",");
+}
+
+// Sélectionne l'entrée du mois courant dans un tableau [{month:"YYYY-MM", ...}]
+function pickCurrentMonthEntry(json) {
+  if (!Array.isArray(json)) return null;
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  return json.find(e => e?.month === ym) ?? json[json.length - 1] ?? null;
+}
+
+// Extrait { user, diff, month, epoch, fullAddress }
+function extractWinnerAndDiff(entry) {
+  if (!entry || typeof entry !== "object") return { user: null, diff: null, month: null, epoch: null, fullAddress: null };
+
+  let diff = entry.sdiff ?? entry.diff ?? entry.difficulty ?? null;
+  if (typeof diff === "string") {
+    const asNum = Number(diff.replace(/[, ]/g, ""));
+    if (isFinite(asNum)) diff = asNum;
+  }
+
+  const fullAddress = entry.address || null;
+  const user = fullAddress ? shortenMiddle(fullAddress) :
+               (entry.user || entry.username || entry.name || entry.winner || entry.miner || entry.worker || null);
+
+  return { user, diff, month: entry.month || null, epoch: entry.epoch || null, fullAddress };
+}
+
+async function loadMonthlyBests() {
+  const alertBox = document.getElementById("monthlyBestAlert");
+  if (!alertBox) return;
+
+  const elUser   = document.getElementById("bestUser");
+  const elDiff   = document.getElementById("bestDiff");
+  const elMonth  = document.getElementById("bestMonth");
+  const elWhen   = document.getElementById("bestWhen");
+  const elWhenWrap = document.getElementById("bestWhenWrap");
+  const elDot    = document.getElementById("bestLiveDot");
+  const elBadge  = document.getElementById("bestOngoingBadge");
+
+  try {
+    const r = await fetch(MONTHLY_BESTS_API, { cache: "no-cache" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const json = await r.json();
+
+    const entry = pickCurrentMonthEntry(json);
+    const { user, diff, month, epoch, fullAddress } = extractWinnerAndDiff(entry);
+
+    if (user && diff != null) {
+      // Remplissage valeurs
+      if (elUser) {
+        elUser.textContent = user;
+        if (fullAddress) elUser.title = fullAddress;
+      }
+      if (elDiff) elDiff.textContent = formatDiffUnits(diff);
+      if (elMonth) elMonth.textContent = month || "";
+
+      if (elWhenWrap) elWhenWrap.classList.toggle("d-none", !epoch);
+      if (elWhen && epoch) {
+        const ts = Math.floor(epoch) * 1000;
+        elWhen.setAttribute("datetime", new Date(ts).toISOString());
+        // Affiche un "relative time" si tu as déjà une util de formatage; sinon date ISO courte
+        if (typeof fmt?.timeAgo === "function") {
+          elWhen.textContent = fmt.timeAgo(Math.floor(epoch));
+        } else {
+          elWhen.textContent = new Date(ts).toLocaleString();
+        }
+      }
+
+      // “En cours” si le mois est celui d’aujourd’hui
+      const now = new Date();
+      const ymNow = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const ongoing = month === ymNow;
+
+      if (elDot)   elDot.classList.toggle("d-none", !ongoing);
+      if (elBadge) elBadge.classList.toggle("d-none", !ongoing);
+
+      alertBox.classList.remove("d-none");
+    } else {
+      alertBox.classList.add("d-none");
+    }
+  } catch (e) {
+    console.error("Erreur monthlyBests:", e);
+    alertBox.classList.add("d-none");
+  }
+}
+
+// ====== Helpers additionnels (compat avec ton API) ======
+function fmtMonthLabel(isoMonth /* "YYYY-MM" */) {
+  try {
+    const [y, m] = isoMonth.split("-").map(Number);
+    return new Date(y, m - 1, 1).toLocaleDateString(undefined, { year: "numeric", month: "long" });
+  } catch { return isoMonth || ""; }
+}
+
+function toMillis(epoch) {
+  // ton API envoie epoch possiblement en secondes (float). On convertit proprement.
+  if (epoch == null || !isFinite(Number(epoch))) return null;
+  const s = Number(epoch);
+  // S'il ressemble déjà à des ms (ex: > 10^12), ne pas reconvertir
+  return s > 1e12 ? s : Math.floor(s * 1000);
+}
+
+/**
+ * Normalise une entrée venant de l'API pour l’historique
+ * Entrée possible: { month:"2025-09", sdiff:number, address:"...", epoch:number }
+ * Sortie: { month, user, addr, diff, whenMs, prize_sats? }
+ */
+function normalizeMonthlyBestRow(entry) {
+  const month = entry?.month || null;
+  let diff = entry?.sdiff ?? entry?.diff ?? entry?.difficulty ?? null;
+  if (typeof diff === "string") {
+    const asNum = Number(diff.replace(/[, ]/g, ""));
+    if (isFinite(asNum)) diff = asNum;
+  }
+  const addr = entry?.address || entry?.addr || null;
+  const user = addr ? shortenMiddle(addr) :
+               (entry?.user || entry?.username || entry?.name || entry?.winner || entry?.miner || entry?.worker || "—");
+  const whenMs = toMillis(entry?.epoch ?? entry?.ts ?? entry?.time);
+
+  return {
+    month,
+    user,
+    addr,
+    diff,
+    whenMs,
+    prize_sats: entry?.prize_sats ?? entry?.prize ?? null,
+  };
+}
+
+// ====== Historique: peupler le modal ======
+async function loadMonthlyBestsHistory() {
+  const tbody = document.getElementById("bestshareHistoryBody");
+  if (!tbody) return;
+
+  try {
+    const r = await fetch(MONTHLY_BESTS_API, { cache: "no-cache" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const json = await r.json();
+    const rows = Array.isArray(json) ? json.map(normalizeMonthlyBestRow) : [];
+
+    // Tri: plus récent en premier (par month desc)
+    rows.sort((a, b) => (a.month < b.month ? 1 : -1));
+
+    tbody.innerHTML = "";
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No data</td></tr>`;
+      return;
+    }
+
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+
+      const tdMonth = document.createElement("td");
+      tdMonth.textContent = fmtMonthLabel(r.month || "");
+
+      const tdUser = document.createElement("td");
+      // Affiche l’adresse raccourcie si dispo, sinon user
+      const main = r.addr ? shortenMiddle(r.addr) : (r.user || "—");
+      tdUser.innerHTML = `<strong title="${r.addr || ""}">${main}</strong>`;
+
+      const tdDiff = document.createElement("td");
+      tdDiff.className = "text-end";
+      tdDiff.innerHTML = `<span class="bestshare__diff">${formatDiffUnits(r.diff)}</span>`;
+
+      const tdWhen = document.createElement("td");
+      if (r.whenMs) {
+        const d = new Date(r.whenMs);
+        tdWhen.textContent = d.toLocaleString();
+      } else {
+        tdWhen.textContent = "—";
+      }
+
+      const tdPrize = document.createElement("td");
+      tdPrize.className = "text-end";
+      tdPrize.textContent = r.prize_sats ? `${Number(r.prize_sats).toLocaleString()} sats` : "—";
+
+      tr.append(tdMonth, tdUser, tdDiff, tdWhen, tdPrize);
+      tbody.appendChild(tr);
+    }
+  } catch (e) {
+    console.error("Erreur loadMonthlyBestsHistory:", e);
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Failed to load history</td></tr>`;
+  }
+}
+
+// Ouvre/refresh l’historique à l’ouverture du modal (Bootstrap)
+document.getElementById("bestshareHistoryModal")
+  ?.addEventListener("show.bs.modal", loadMonthlyBestsHistory);
+
+
+
+
 // ====== Fetch History (une fois), puis filtrage local ======
 async function loadHistory(){
   try{
@@ -328,6 +543,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if(el) selectOnClick(el);
   });
 
+  // Chargement initial du bandeau Best Diff
+  loadMonthlyBests();
+
   // Topologie : lazy load + refresh quand ouvert
   const collapseEl = document.getElementById('topologyCollapse');
   if(collapseEl){
@@ -345,4 +563,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
     loadHeaderPings(); // init immédiate des LEDs
     startRefresh();
   });
+
 });

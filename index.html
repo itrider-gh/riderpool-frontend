@@ -128,6 +128,146 @@
         </div>
       </section>
 
+
+      <!-- ====== MEILLEUR SHARE DU MOIS – RÉCOMPENSE ====== -->
+      <section id="monthlyBestSection" class="card-dark bestshare" aria-labelledby="bestShareTitle">
+        <div class="bestshare__wrap">
+          <!-- Colonne gauche: infos + live -->
+          <div class="bestshare__left">
+            <div class="bestshare__head">
+              <h2 id="bestShareTitle" class="h5 m-0 d-flex align-items-center gap-2">
+                <span class="live-dot d-none" id="bestLiveDot" aria-hidden="true"></span>
+                <span>Meilleur share du mois</span>
+              </h2>
+
+              <div class="d-flex align-items-center gap-2">
+                <!-- Actions: aide + historique -->
+                <button class="icon-btn" type="button" data-bs-toggle="modal" data-bs-target="#bestshareHelpModal" aria-label="Explication du prix">
+                  <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+                </button>
+                <button class="icon-btn" type="button" data-bs-toggle="modal" data-bs-target="#bestshareHistoryModal" aria-label="Meilleurs shares des mois précédents">
+                  <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                </button>
+
+                <span class="sats-badge" aria-label="Récompense mensuelle">
+                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                  <strong id="bestPrizeSats">5,000</strong><span>&nbsp;sats</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Bandeau live -->
+            <div id="monthlyBestAlert" class="bestshare__alert" role="status" aria-live="polite">
+              <div class="bestshare__line">
+                <span class="muted">Meilleur share actuel :</span>
+                <strong id="bestUser" class="bestshare__user" title=""></strong>
+              </div>
+              <div class="bestshare__line">
+                <span class="muted">Diff</span>
+                <strong id="bestDiff" class="bestshare__diff">–</strong>
+                <span class="dot">&middot;</span>
+                <span id="bestMonth" class="muted"></span>
+                <span id="bestWhenWrap" class="muted d-none">
+                  <span class="dot">&middot;</span>
+                  <time id="bestWhen" datetime=""></time>
+                </span>
+                <span id="bestOngoingBadge" class="pill glow d-none">En cours</span>
+              </div>
+            </div>
+
+            <!-- Texte financement -->
+            <div class="bestshare__foot">
+              <p class="mb-1">
+                Ce prix est financé <strong>à 100% par les dons de la communauté</strong>.
+              </p>
+              <p class="mb-0">
+                Pour que cette récompense continue — et tenter de la gagner — vos dons sont les bienvenus sur la
+                <a href="https://chauffagistes-pool.fr/#don" id="donationLink">cagnotte</a>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Colonne droite: QR Lightning -->
+          <aside class="bestshare__right" aria-labelledby="bestShareCtaTitle">
+            <div class="qr-card">
+              <div class="qr-card__head">
+                <h3 id="bestShareCtaTitle" class="h6 m-0 text-warning">Cagnotte Lightning</h3>
+              </div>
+              <img id="donationQr" src="../qr.jpg" alt="QR code cagnotte Lightning" width="180" height="180" decoding="async" />
+              <div class="qr-card__addr">
+                <code id="donationLnurl" class="small" hidden>chauffagistes@walletofsatoshi.com</code>
+                <button class="btn btn-sm btn-outline-light" onclick="copyText(document.getElementById('donationLnurl').innerText)" aria-label="Copier l’adresse">Copier</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ===== Modal: Aide / Explication ===== -->
+      <div class="modal fade" id="bestshareHelpModal" tabindex="-1" aria-labelledby="bestshareHelpTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content card-dark border-0">
+            <div class="modal-header">
+              <h5 class="modal-title" id="bestshareHelpTitle">À propos du prix "Meilleur Share du mois"</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body modal-body-light">
+              <p>
+                Le montant affiché en sats correspond au <strong>paiement manuel</strong> envoyé à l’adresse qui a soumis
+                le meilleur share pendant le mois. Ce mini-jeu est financé par <strong>les dons de la communauté</strong>.
+              </p>
+              <p>
+                Les gains sont <strong>définis en fonction des fonds disponibles</strong> et peuvent varier d’un mois à l’autre.
+              </p>
+            </div>
+            <div class="modal-footer">
+              <a class="btn btn-warning" href="https://chauffagistes-pool.fr/#don">
+                Donner pour la cagnotte
+              </a>
+              <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Fermer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Modal: Historique ===== -->
+      <div class="modal fade" id="bestshareHistoryModal" tabindex="-1" aria-labelledby="bestshareHistoryTitle" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content card-dark border-0">
+            <div class="modal-header">
+              <h5 class="modal-title" id="bestshareHistoryTitle">Meilleurs shares des mois précédents</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="table-responsive">
+                <table class="table table-dark table-striped table-borderless align-middle">
+                  <thead>
+                    <tr>
+                      <th style="min-width:120px;">Mois</th>
+                      <th>Utilisateur / Adresse</th>
+                      <th class="text-end" style="min-width:140px;">Meilleure diff</th>
+                      <th style="min-width:160px;">Quand</th>
+                      <th class="text-end" style="min-width:140px;">Gain (sats)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bestshareHistoryBody">
+                    <!-- Renseigné par JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Fermer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
       <!-- BLOC STATS RAPIDES -->
       <section class="section">
         <h3 class="section-title text-center">Statut de la pool</h3>

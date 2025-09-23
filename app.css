@@ -63,3 +63,100 @@ code{ background:#222; color:var(--orange); padding:.25rem .5rem; border-radius:
   70%{ opacity:1; box-shadow:0 0 8px 4px rgba(26,161,121,.2) }
   100%{ opacity:.7; box-shadow:0 0 0 0 rgba(26,161,121,0) }
 }
+
+
+
+
+/* ===== Bestshare block ===== */
+.bestshare { padding: 1rem; border-radius: 14px; position: relative; overflow: hidden; }
+.bestshare::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background: radial-gradient(1200px 200px at 10% -30%, rgba(247,147,26,.12), transparent 60%),
+              radial-gradient(800px 140px at 80% -20%, rgba(247,147,26,.07), transparent 65%);
+}
+.bestshare__wrap{ display:grid; gap:16px; align-items:stretch; }
+@media (min-width: 768px){
+  .bestshare__wrap{ grid-template-columns: 1fr 230px; gap:20px; }
+}
+
+/* Left / Right columns */
+.bestshare__left{ display:flex; flex-direction:column; gap:.75rem; }
+.bestshare__head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.bestshare__foot{ color:var(--muted); }
+
+/* Sticky QR card on desktop */
+@media (min-width: 768px){
+  .bestshare__right{ position: sticky; top: 1rem; align-self: start; }
+}
+.bestshare__right{ display:flex; align-items:center; justify-content:center; }
+
+/* Sats badge */
+.sats-badge{
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.35rem .6rem; border-radius:999px;
+  background:#1b140c; border:1px solid #3b2a16; color:#ffd9ad;
+  box-shadow: inset 0 0 12px rgba(247,147,26,.15), 0 0 20px rgba(247,147,26,.06);
+  font-weight:700;
+}
+.sats-badge i{ font-size:.9rem; }
+.sats-badge strong{ color:#ffb25d; letter-spacing:.2px; }
+
+/* Inline icon buttons */
+.icon-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:10px;
+  background:#161616; color:#ffb25d; border:1px solid #3b2b18;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+.icon-btn:hover{ transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.35); border-color:#6a4b2a; }
+.icon-btn i{ font-size:1rem; line-height:1; }
+
+/* Alert */
+.bestshare__alert{
+  background: linear-gradient(180deg, #19130c, #14110c);
+  border:1px solid #3c2c1a;
+  border-radius:12px; padding:.75rem .9rem;
+}
+.bestshare__line{ display:flex; align-items:center; flex-wrap:wrap; gap:.5rem; }
+.bestshare__user{ color:#fff; }
+.bestshare__diff{ color:#ffb25d; }
+.bestshare .dot{ color:var(--muted) }
+.bestshare__alert:focus-within{ outline:2px solid rgba(247,147,26,.35); outline-offset:2px; border-color:#6a4b2a; }
+
+/* Ongoing pill + live dot */
+.pill.glow{
+  border-color:#543b1f; background:#20160a; color:#ffd9ad;
+  box-shadow: 0 0 0 0 rgba(247,147,26,.55);
+  animation: pulse 1.8s infinite;
+}
+.live-dot {
+  width:.7rem; height:.7rem; border-radius:999px; background: var(--orange, #f7931a);
+  display:inline-block; box-shadow:0 0 0 0 rgba(247,147,26,.7); animation:pulse 1.5s infinite;
+}
+
+/* QR card */
+.qr-card{
+  background:#161616; border:1px solid var(--border); border-radius:14px;
+  padding:12px; width:210px; text-align:center;
+  box-shadow: 0 6px 20px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.02);
+}
+.qr-card__head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:.35rem; }
+.qr-card img{ width:180px; height:180px; object-fit:cover; border-radius:10px; border:1px solid #2b2b2b; background:#0f0f0f; }
+.qr-card__addr{ display:flex; gap:.5rem; align-items:center; justify-content:center; margin-top:.6rem; flex-wrap:wrap; }
+.qr-card code{ background:#1c1c1c; color:#ffb25d; border:1px solid #2b2b2b; padding:.2rem .4rem; border-radius:6px; }
+
+/* Modal theming (dark) */
+.modal-content.card-dark{ background:#131313; color:#fff; }
+.modal-header{ border:0; }
+.modal-footer{ border:0; }
+/* Texte du modal en gris clair sur fond sombre */
+.modal-body-light {
+  color: #ccc; /* gris lisible */
+}
+
+/* Pulse */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(247,147,26,.7); }
+  70% { box-shadow: 0 0 0 10px rgba(247,147,26,0); }
+  100% { box-shadow: 0 0 0 0 rgba(247,147,26,0); }
+}
