@@ -117,7 +117,8 @@ async function loadPool(){
     set("pillWorkers", runtime.Workers ?? "–");
     set("pillAccepted", fmt.compact(sh.accepted||0));
     set("pillRejected", fmt.compact(sh.rejected||0));
-    set("pillUpdated", "Maj: " + fmt.timeAgo(runtime.lastupdate));
+    set("pillUpdated", "Updated: " + fmt.timeAgo(runtime.lastupdate));
+    set("nodeUpdated", fmt.timeAgo(runtime.lastupdate));
 
     const total = (sh.accepted||0)+(sh.rejected||0);
     const rejRate = total ? (sh.rejected/total) : NaN;
@@ -516,6 +517,7 @@ function startRefresh(){
   timer = setInterval(()=>{
     loadPool();
     loadHeaderPings(); // LEDs header
+    loadNode();
   }, 30000);
 }
 
@@ -535,6 +537,53 @@ document.addEventListener('click', (e)=>{
   if(!btn) return;
   updateHistoryChart(btn.dataset.range);
 });
+
+
+// ====== Node (full node Bitcoin) ======
+const NODE_API = `${API}/node`;
+
+function parseSubversion(subv){
+  // ex: "/Satoshi:28.1.0/" -> "Satoshi 28.1.0"
+  if(!subv || typeof subv !== "string") return "–";
+  const s = subv.replace(/\//g, ""); // "Satoshi:28.1.0"
+  const m = s.match(/^([^:]+):(.+)$/);
+  return m ? `${m[1]} ${m[2]}` : s;
+}
+
+let lastNodeUpdate = null;
+
+async function loadNode(){
+  try{
+    const r = await fetch(NODE_API, { cache: "no-cache" });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const json = await r.json();
+
+    const height  = Number(json?.height);
+    const peers   = Number(json?.peers);
+    const version = parseSubversion(json?.subversion);
+
+    const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent = val; };
+
+    set("nodeHeight", isFinite(height) ? height.toLocaleString("fr-FR") : "–");
+    set("nodePeers",  isFinite(peers)  ? peers.toString() : "–");
+    set("nodeVersion", version);
+  }catch(e){
+    console.error("Erreur node:", e);
+    // En cas d’erreur, on affiche en “–”
+    ["nodeHeight","nodePeers","nodeVersion"].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.textContent = "–";
+    });
+  }
+}
+
+// (Optionnel) petit ticker pour rafraîchir l’affichage “timeAgo” du nœud
+setInterval(()=>{
+  const updEl = document.getElementById("nodeUpdated");
+  if(updEl && lastNodeUpdate && typeof fmt?.timeAgo === "function"){
+    updEl.textContent = "Maj: " + fmt.timeAgo(lastNodeUpdate);
+  }
+}, 1000);
 
 document.addEventListener('DOMContentLoaded', ()=>{
   // Sélection rapide des codes
@@ -559,7 +608,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   ensureCharts();
-  Promise.all([loadPool(), loadHistory()]).then(()=>{
+  Promise.all([loadPool(), loadHistory(), loadNode()]).then(()=>{
     loadHeaderPings(); // init immédiate des LEDs
     startRefresh();
   });
