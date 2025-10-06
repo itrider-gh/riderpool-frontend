@@ -1,514 +1,222 @@
 <!DOCTYPE html>
-<html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Chauffage & Bitcoin – Pool de minage communautaire française</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rider Pool – BC2 Solo Mining (1% fee, hosted in France)</title>
+  <meta name="description" content="Rider Pool is a community BC2 (Bitcoin 2) solo-mining pool with 1% fee, hosted in France. Join with your BC2 address as username." />
+  <link rel="canonical" href="https://riderpool.online/" />
+  <meta property="og:title" content="Rider Pool – BC2 Solo Mining (1% fee)" />
+  <meta property="og:description" content="Community BC2 solo pool hosted in France. Join now with your BC2 address." />
+  <meta property="og:image" content="https://riderpool.online/logo.jpg" />
+  <meta property="og:url" content="https://riderpool.online" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/logo.jpg" type="image/jpeg" />
 
-    <!-- SEO -->
-    <meta name="description" content="Participez au minage Bitcoin en France avec notre pool communautaire. On valorise la chaleur du minage pour le chauffage. 0% de frais." />
-    <link rel="canonical" href="https://chauffagistes-pool.fr/" />
+  <!-- Chart.js only (no external UI kit for a clean, unique DA) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-    <!-- Open Graph / Twitter -->
-    <meta property="og:title" content="Chauffagistes – Pool Bitcoin FR (0% fees)" />
-    <meta property="og:description" content="Pool communautaire française. Minage Bitcoin + valorisation de chaleur pour le chauffage. Rejoignez-nous !" />
-    <meta property="og:image" content="https://chauffagistes-pool.fr/logo.jpg" />
-    <meta property="og:url" content="https://chauffagistes-pool.fr" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-
-    <link rel="icon" href="logo.jpg" type="image/jpeg" />
-
-    <link rel="alternate" hreflang="fr" href="https://chauffagistes-pool.fr/" />
-    <link rel="alternate" hreflang="en" href="https://chauffagistes-pool.fr/en/" />
-    <link rel="alternate" hreflang="x-default" href="https://chauffagistes-pool.fr/" />
-
-
-    <!-- Vendor CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-
-    <!-- App CSS -->
-    <link rel="stylesheet" href="app.css" />
-  </head>
-  <body>
-    <canvas id="embers" aria-hidden="true"></canvas>
-
-    <!-- NAV -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center" href="#">
-          <img src="logo.jpg" alt="Logo Chauffagistes" />
-          <div class="d-flex flex-column align-items-start ms-2">
-            <strong>Chauffagistes</strong>
-            <small id="hashrateHeader" class="text-warning" style="font-size:.7rem">Hashrate : –</small>
-          </div>
-        </a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Ouvrir le menu">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="status-leds flex-wrap justify-content-center justify-content-lg-end my-2 my-lg-0 me-lg-3">
-          <span id="stProxy"   class="status-item" title="Proxy">
-            <span class="led"></span><span class="label">Proxy</span><span class="state">–</span>
-          </span>
-          <span id="stPrimary" class="status-item" title="Primary Stratum">
-            <span class="led"></span><span class="label">Primary</span><span class="state">–</span>
-          </span>
-          <span id="stBackup"  class="status-item" title="Backup Stratum">
-            <span class="led"></span><span class="label">Backup</span><span class="state">–</span>
-          </span>
+  <!-- App CSS -->
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <!-- HEADER / NAV -->
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#">
+        <img src="/logo.jpg" alt="Rider Pool logo" class="brand-logo" />
+        <div class="brand-text">
+          <strong>Rider Pool</strong>
+          <small>BC2 Solo Mining • 1% fee • France</small>
         </div>
-
-        <div class="collapse navbar-collapse justify-content-end text-center" id="navbarNav">
-          <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link" href="#solo">Solo mining</a></li>
-            <li class="nav-item"><a class="nav-link" href="#private">Minage privé</a></li>
-            <li class="nav-item"><a class="nav-link" href="#don">Donations</a></li>
-            <li class="nav-item"><a class="nav-link" href="#fournisseur">Fournisseur</a></li>
-            <li class="nav-item"><a class="nav-link" href="#discord">Communauté</a></li>
-            <li class="nav-item"><a class="nav-link" href="public-stats.html">Statistiques</a></li>
-          </ul>
-
-          <ul class="navbar-nav ms-lg-3">
-            <li class="nav-item d-flex align-items-center gap-2">
-              <a class="nav-link lang-link" href="/en/" lang="en" hreflang="en" aria-label="English">
-                <!-- Drapeau GB -->
-                <span class="flag" aria-hidden="true">
-                  <svg viewBox="0 0 60 30" width="18" height="9" xmlns="http://www.w3.org/2000/svg">
-                    <clipPath id="s"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
-                    <clipPath id="t"><path d="M30,15 h30 v15 z v-30 z h-30 z h-30 z v30 z"/></clipPath>
-                    <g clip-path="url(#s)">
-                      <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
-                      <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/>
-                      <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#t)" stroke="#C8102E" stroke-width="4"/>
-                      <path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/>
-                      <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
-                    </g>
-                  </svg>
-                </span>
-                EN
-              </a>
-            </li>
-          </ul>
-
-        </div>
+      </a>
+      <div class="header-kpis">
+        <div class="pill" title="Estimated total pool hashrate in the last hour">HR 1h: <strong id="kpiHr1h">–</strong></div>
+        <div class="pill" title="Active users / workers">Users: <strong id="pillUsers">–</strong></div>
+        <div class="pill">Workers: <strong id="pillWorkers">–</strong></div>
+        <div class="pill good" id="pillReject">Reject: <strong id="pillRejectVal">–</strong></div>
+        <div class="pill dim" id="pillUpdated">Updated: –</div>
       </div>
-    </nav>
+    </div>
+  </header>
 
-    <main class="container">
-      <!-- HERO -->
-      <section class="section">
-        <div class="row g-3 align-items-center">
-          <div class="col-lg-7 text-center-md-start">
-            <h1 class="h3 text-warning m-0">La pool Bitcoin communautaire française</h1>
-            <p class="mt-2">
-              Projet FR de minage <strong>Bitcoin</strong> à <strong>0% de frais</strong>, avec valorisation de la chaleur
-              pour le <strong>chauffage</strong>. Contribuez à la décentralisation tout en réchauffant utilement.
+  <main>
+    <!-- TOP SECTION: What the pool is + How to join + Basic node stats -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-card glass">
+          <div class="hero-text">
+            <h1>Community BC2 Solo Pool</h1>
+            <p class="lead">
+              Rider Pool is a community-run <strong>BitcoinII (BC2)</strong> solo-mining pool, hosted in France with a
+              transparent <strong>1% fee</strong>. Point your miner to our Stratum endpoint with your <em>own BC2 address</em> to receive rewards directly to you.
             </p>
-            <div class="statusbar mt-2">
-              <span class="pill" id="pillUpdated">Maj: –</span>
-              <span class="pill">Utilisateurs <strong id="pillUsers">–</strong></span>
-              <span class="pill">Workers <strong id="pillWorkers">–</strong></span>
-              <span class="pill good">Acceptés <strong id="pillAccepted">–</strong></span>
-              <span class="pill bad">Rejetés <strong id="pillRejected">–</strong></span>
-              <span class="pill" id="pillRejectRate">Rejet: –</span>
-            </div>
 
-            <div class="d-grid-cta mt-3">
-              <a href="#solo" class="btn btn-warning w-100">🚀 Rejoindre la pool</a>
-              <a href="public-stats.html" class="btn btn-outline-light w-100">📊 Voir les statistiques publiques</a>
-              <a href="#discord" class="btn btn-outline-warning w-100">💬 Rejoindre le Discord</a>
-            </div>
-          </div>
-          <div class="col-lg-5 text-center">
-            <img src="logo.webp" alt="Logo animé Chauffagistes" class="responsive-logo" />
-          </div>
-        </div>
-      </section>
-
-
-      <!-- ====== MEILLEUR SHARE DU MOIS – RÉCOMPENSE ====== -->
-      <section id="monthlyBestSection" class="card-dark bestshare" aria-labelledby="bestShareTitle">
-        <div class="bestshare__wrap">
-          <!-- Colonne gauche: infos + live -->
-          <div class="bestshare__left">
-            <div class="bestshare__head">
-              <h2 id="bestShareTitle" class="h5 m-0 d-flex align-items-center gap-2">
-                <span class="live-dot d-none" id="bestLiveDot" aria-hidden="true"></span>
-                <span>Meilleur share du mois</span>
-              </h2>
-
-              <div class="d-flex align-items-center gap-2">
-                <!-- Actions: aide + historique -->
-                <button class="icon-btn" type="button" data-bs-toggle="modal" data-bs-target="#bestshareHelpModal" aria-label="Explication du prix">
-                  <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
-                </button>
-                <button class="icon-btn" type="button" data-bs-toggle="modal" data-bs-target="#bestshareHistoryModal" aria-label="Meilleurs shares des mois précédents">
-                  <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                </button>
-
-                <span class="sats-badge" aria-label="Récompense mensuelle">
-                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-                  <strong id="bestPrizeSats">5,000</strong><span>&nbsp;sats</span>
-                </span>
+            <div class="join">
+              <div class="join-row">
+                <span class="label">Stratum</span>
+                <code id="confUrl">stratum+tcp://riderpool.online:3334</code>
+                <button class="btn" data-copy="#confUrl">Copy</button>
               </div>
-            </div>
-
-            <!-- Bandeau live -->
-            <div id="monthlyBestAlert" class="bestshare__alert" role="status" aria-live="polite">
-              <div class="bestshare__line">
-                <span class="muted">Meilleur share actuel :</span>
-                <strong id="bestUser" class="bestshare__user" title=""></strong>
+              <div class="join-row">
+                <span class="label">Username</span>
+                <code id="confUser">your_bc2_address.worker</code>
+                <button class="btn" data-copy="#confUser">Copy</button>
               </div>
-              <div class="bestshare__line">
-                <span class="muted">Diff</span>
-                <strong id="bestDiff" class="bestshare__diff">–</strong>
-                <span class="dot">&middot;</span>
-                <span id="bestMonth" class="muted"></span>
-                <span id="bestWhenWrap" class="muted d-none">
-                  <span class="dot">&middot;</span>
-                  <time id="bestWhen" datetime=""></time>
-                </span>
-                <span id="bestOngoingBadge" class="pill glow d-none">En cours</span>
-              </div>
-            </div>
-
-            <!-- Texte financement -->
-            <div class="bestshare__foot">
-              <p class="mb-1">
-                Ce prix est financé <strong>à 100% par les dons de la communauté</strong>.
-              </p>
-              <p class="mb-0">
-                Pour que cette récompense continue — et tenter de la gagner — vos dons sont les bienvenus sur la
-                <a href="https://chauffagistes-pool.fr/#don" id="donationLink">cagnotte</a>.
-              </p>
-            </div>
-          </div>
-
-          <!-- Colonne droite: QR Lightning -->
-          <aside class="bestshare__right" aria-labelledby="bestShareCtaTitle">
-            <div class="qr-card">
-              <div class="qr-card__head">
-                <h3 id="bestShareCtaTitle" class="h6 m-0 text-warning">Cagnotte Lightning</h3>
-              </div>
-              <img id="donationQr" src="../qr.jpg" alt="QR code cagnotte Lightning" width="180" height="180" decoding="async" />
-              <div class="qr-card__addr">
-                <code id="donationLnurl" class="small" hidden>chauffagistes@walletofsatoshi.com</code>
-                <button class="btn btn-sm btn-outline-light" onclick="copyText(document.getElementById('donationLnurl').innerText)" aria-label="Copier l’adresse">Copier</button>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <!-- ===== Modal: Aide / Explication ===== -->
-      <div class="modal fade" id="bestshareHelpModal" tabindex="-1" aria-labelledby="bestshareHelpTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content card-dark border-0">
-            <div class="modal-header">
-              <h5 class="modal-title" id="bestshareHelpTitle">À propos du prix "Meilleur Share du mois"</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
-            </div>
-            <div class="modal-body modal-body-light">
-              <p>
-                Le montant affiché en sats correspond au <strong>paiement manuel</strong> envoyé à l’adresse qui a soumis
-                le meilleur share pendant le mois. Ce mini-jeu est financé par <strong>les dons de la communauté</strong>.
-              </p>
-              <p>
-                Les gains sont <strong>définis en fonction des fonds disponibles</strong> et peuvent varier d’un mois à l’autre.
-              </p>
-            </div>
-            <div class="modal-footer">
-              <a class="btn btn-warning" href="https://chauffagistes-pool.fr/#don">
-                Donner pour la cagnotte
-              </a>
-              <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Fermer</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===== Modal: Historique ===== -->
-      <div class="modal fade" id="bestshareHistoryModal" tabindex="-1" aria-labelledby="bestshareHistoryTitle" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-          <div class="modal-content card-dark border-0">
-            <div class="modal-header">
-              <h5 class="modal-title" id="bestshareHistoryTitle">Meilleurs shares des mois précédents</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
-            </div>
-
-            <div class="modal-body">
-              <div class="table-responsive">
-                <table class="table table-dark table-striped table-borderless align-middle">
-                  <thead>
-                    <tr>
-                      <th style="min-width:120px;">Mois</th>
-                      <th>Utilisateur / Adresse</th>
-                      <th class="text-end" style="min-width:140px;">Meilleure diff</th>
-                      <th style="min-width:160px;">Quand</th>
-                      <th class="text-end" style="min-width:140px;">Gain (sats)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="bestshareHistoryBody">
-                    <!-- Renseigné par JS -->
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Fermer</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
-
-      <!-- BLOC STATS RAPIDES -->
-      <section class="section">
-        <h3 class="section-title text-center">Statut de la pool</h3>
-        <div class="grid grid-cols-4">
-          <div class="card-dark p-3 kpi">
-            <div class="label">Hashrate (1h)</div>
-            <div class="value" id="kpiHr1h">–</div>
-          </div>
-          <div class="card-dark p-3 kpi">
-            <div class="label">Hashrate (1j)</div>
-            <div class="value" id="kpiHr1d">–</div>
-          </div>
-          <div class="card-dark p-3 kpi">
-            <div class="label">SPS (1h)</div>
-            <div class="value" id="kpiSps1h">–</div>
-          </div>
-          <div class="card-dark p-3 kpi">
-            <div class="label">Best share</div>
-            <div class="value" id="kpiBestShare">–</div>
-          </div>
-          <div class="card-dark p-3 kpi" title="Hauteur de la blockchain vue par le nœud">
-            <div class="label">Hauteur</div>
-            <div class="value" id="nodeHeight" aria-live="polite">–</div>
-          </div>
-          <div class="card-dark p-3 kpi" title="Version logicielle (subversion)">
-            <div class="label">Version</div>
-            <div class="value" id="nodeVersion" aria-live="polite">–</div>
-          </div>
-          <div class="card-dark p-3 kpi" title="Pairs connectés (in/out)">
-            <div class="label">Pairs</div>
-            <div class="value" id="nodePeers" aria-live="polite">–</div>
-          </div>
-          <div class="card-dark p-3 kpi" title="Dernière mise à jour des données du nœud">
-            <div class="label">Dernière MAJ</div>
-            <div class="value" id="nodeUpdated" aria-live="polite"></div>
-          </div>
-        </div>
-
-
-        <div class="row g-3 mt-3">
-          <div class="col-12">
-            <div class="card-dark p-3">
-              <h5 class="text-warning mb-2 d-flex align-items-center justify-content-between flex-wrap">
-                <span>Historique du hashrate</span>
-
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <div class="btn-group me-1" role="group" aria-label="Plage historique">
-                    <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="7d">Semaine</button>
-                    <button type="button" class="btn btn-sm btn-outline-light btn-range active" data-range="30d">Mois</button>
-                    <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="365d">Année</button>
-                    <button type="button" class="btn btn-sm btn-outline-light btn-range" data-range="all">All time</button>
-                  </div>
-
-                  <button
-                    id="toggleTopo"
-                    class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-2 topo-toggle"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#topologyCollapse"
-                    aria-expanded="false"
-                    aria-controls="topologyCollapse"
-                    title="Afficher/masquer la topologie">
-                    Topologie
-                    <span class="chevron" aria-hidden="true">▾</span>
-                  </button>
-                </div>
-              </h5>
-
-              <canvas id="hashrateChart" style="max-height:300px" aria-label="Historique hashrate"></canvas>
-              <div class="muted small mt-1 text-center text-md-start">Unité : TH/s (moyennes journalières)</div>
-
-              <div id="topologyCollapse" class="collapse">
-                <div class="card-dark p-3 mt-3">
-                  <div class="d-flex justify-content-center mb-2 statusbar flex-wrap">
-                    <span class="pill">Total <strong id="pingTotal">–</strong></span>
-                    <span class="pill good">En ligne <strong id="pingOnline">–</strong></span>
-                    <span class="pill bad">Hors ligne <strong id="pingOffline">–</strong></span>
-                  </div>
-
-                  <div class="net-wrap d-flex justify-content-center">
-                    <svg id="netSvg" viewBox="0 0 700 260" role="img" aria-label="Schéma réseau de la pool" style="transform: translateX(-70px);"></svg>
-                  </div>
-
-                  <div class="muted small mt-2 text-center">
-                    Les liens sont verts si les deux nœuds sont en ligne. Latences en millisecondes (live).<br>
-                    Pings effectués avec l'outil 
-                    <a href="https://github.com/2miners/stratum-ping" target="_blank" rel="noopener">stratum-ping</a>, depuis le proxy situé à Roubaix (OVH).
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- JOIN GUIDE -->
-      <section id="solo" class="section">
-        <h3 class="section-title text-center">Solo mining</h3>
-        <ol class="text-start mx-auto" style="max-width:920px">
-          <li class="mb-2">
-            Configurez votre mineur (ou proxy stratum) :
-            <div class="card-dark p-3 mt-2">
-              <div class="mb-1">URL stratum :</div>
-              <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center justify-content-md-start">
-                <code id="confUrl">stratum+tcp://chauffagistes-pool.fr:3333</code>
-                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('confUrl').innerText)">Copier</button>
-              </div>
-              <div class="mt-3 mb-1">Identifiant (user/pass) :</div>
-              <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center justify-content-md-start">
-                <code id="confUser">adresse_btc.worker</code>
+              <div class="join-row">
+                <span class="label">Password</span>
                 <code id="confPass">x</code>
-                <button class="btn btn-sm btn-outline-light" onclick="copyText('adresse_btc.worker:x')">Copier</button>
+                <button class="btn" data-copy="#confPass">Copy</button>
               </div>
-            </div>
-          </li>
-          <li class="mb-2">
-            Vérifiez votre adresse sur la page <a href="public-stats.html">Statistiques</a> (recherche utilisateur).
-          </li>
-          <li>
-            Besoin d’aide ? Rejoignez le <a href="#discord">Discord</a>.
-          </li>
-        </ol>
-
-        <div class="d-grid-cta mt-3 mx-auto" style="max-width:420px">
-          <a href="public-stats.html" class="btn btn-outline-warning w-100">📈 Ouvrir les Statistiques publiques</a>
-        </div>
-      </section>
-
-      <!-- PRIVÉ -->
-      <section id="private" class="section">
-        <h3 class="section-title text-center">Minage en mode pool</h3>
-        <p class="text-center">Section privée avec minage mutualisé et dashboard (accès via Discord, sous conditions).</p>
-        <div class="d-grid-cta mx-auto" style="max-width:420px">
-          <a href="https://swakraft.hopto.org/chauffagistes" class="btn btn-warning w-100" target="_blank" rel="noopener">Accéder au dashboard privé</a>
-        </div>
-      </section>
-
-      <!-- FOURNISSEUR PRÉFÉRÉ -->
-      <section id="fournisseur" class="section">
-        <h3 class="section-title text-center">Fournisseur préféré des Chauffagistes</h3>
-        <div class="card-dark p-3">
-          <div class="row g-3 align-items-center">
-            <div class="col-md-8">
-              <p class="mb-2">
-                Matériel et accessoires recommandés chez
-                <a href="https://silexperience.company.site/" target="_blank" rel="noopener">Silexperience</a>.
-              </p>
-              <ul class="mb-2">
-                <li>Catalogue orienté mining & intégrations chauffage</li>
-                <li>Avantage communauté : <strong>-5%</strong> avec le code promo <code>CHAUFFAGISTES</code></li>
-              </ul>
-              <a class="btn btn-outline-warning" href="https://silexperience.company.site/" target="_blank" rel="noopener">🛒 Visiter Silexperience</a>
-            </div>
-            <div class="col-md-4 text-center">
-              <img src="logo.jpg" alt="Chauffagistes" class="responsive-logo" />
-              <div class="muted small mt-2">Code promo : <code>CHAUFFAGISTES</code> (–5%)</div>
+              <p class="hint">Use a <strong>valid BC2 address</strong> as the username. Rewards (if you find a block) are paid to that address.</p>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- DONATIONS -->
-      <section id="don" class="section">
-        <h3 class="section-title text-center">Financement & Frais</h3>
-        <p class="text-center">La pool prend <strong>0% de frais</strong> et fonctionne grâce aux dons de la communauté.</p>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="card-dark p-3">
-              <h5 class="text-warning text-center text-md-start">Bitcoin (on-chain)</h5>
-              <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center justify-content-md-start">
-                <code id="addrBTC">bc1qkt3n2yzu0kxlm72hhhx9vnxge8zhr5k2q4zc6l</code>
-                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('addrBTC').innerText)">Copier</button>
+          <div class="hero-side">
+            <div class="stats-grid">
+              <div class="stat">
+                <div class="stat-label">Hashrate (1h)</div>
+                <div class="stat-value" id="kpiHr1h2">–</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Best Share</div>
+                <div class="stat-value" id="kpiBestShare">–</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label" title="Blockchain height from our node">Height</div>
+                <div class="stat-value" id="nodeHeight">–</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label" title="Node version (subversion)">Node</div>
+                <div class="stat-value" id="nodeVersion">–</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label" title="Connected peers">Peers</div>
+                <div class="stat-value" id="nodePeers">–</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Last update</div>
+                <div class="stat-value" id="nodeUpdated">–</div>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card-dark p-3">
-              <h5 class="text-warning text-center text-md-start">Lightning</h5>
-              <div class="d-flex gap-2 align-items-center flex-wrap justify-content-center justify-content-md-start">
-                <code id="addrLN">chauffagistes@walletofsatoshi.com</code>
-                <button class="btn btn-sm btn-outline-warning" onclick="copyText(document.getElementById('addrLN').innerText)">Copier</button>
-              </div>
+        </div> <!-- /hero-card -->
+
+        <!-- USER STATS -->
+        <section class="userstats">
+        <div class="wrap">
+            <div class="panel">
+            <div class="panel-head">
+                <h2>Your Stats</h2>
+                <span class="sub">Enter your BC2 address to view your hashrate & workers</span>
             </div>
-          </div>
+
+            <div class="join us-input">
+                <div class="join-row">
+                <span class="label">BC2 Address</span>
+                <input id="addrInput" type="text" inputmode="text" autocomplete="on" placeholder="bc1q..." />
+                <button id="addrGo" class="btn">View</button>
+                </div>
+            </div>
+
+            <div class="us-results" id="usResults" hidden>
+                <div class="stats-grid us-kpis">
+                <div class="stat">
+                    <div class="stat-label">HR 1m</div>
+                    <div class="stat-value" id="usHr1m">–</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">HR 5m</div>
+                    <div class="stat-value" id="usHr5m">–</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">HR 1h</div>
+                    <div class="stat-value" id="usHr1h">–</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">HR 1d</div>
+                    <div class="stat-value" id="usHr1d">–</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Best Share</div>
+                    <div class="stat-value" id="usBestShare">–</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Workers</div>
+                    <div class="stat-value" id="usWorkers">–</div>
+                </div>
+                </div>
+
+                <div class="us-tablewrap">
+                <table class="us-table" id="usTable">
+                    <thead>
+                    <tr>
+                        <th>Worker</th>
+                        <th>HR 1m</th>
+                        <th>HR 5m</th>
+                        <th>HR 1h</th>
+                        <th>HR 1d</th>
+                        <th>HR 7d</th>
+                        <th>Best Share</th>
+                        <th>Last Share</th>
+                    </tr>
+                    </thead>
+                    <tbody><!-- rows injected --></tbody>
+                </table>
+                </div>
+            </div>
+
+            <div class="us-empty" id="usEmpty" hidden>
+                <p class="hint">No data for this address yet. Start mining or check the address spelling.</p>
+            </div>
+
+            <div class="us-error" id="usError" hidden>
+                <p class="hint" style="color:#ef8888">Couldn’t load stats. Please try again.</p>
+            </div>
+            </div>
         </div>
-      </section>
+        </section>
 
-      <!-- CHAUFFAGE -->
-      <section class="section">
-        <h3 class="section-title text-center">Minage & Chauffage : une synergie</h3>
-        <p class="text-center text-md-start">
-          Le nom “Chauffagistes” n’est pas anodin : en réutilisant la chaleur produite par le minage <strong>Bitcoin</strong>,
-          on peut chauffer des locaux (domestiques ou collectifs) tout en sécurisant le réseau. Plusieurs membres testent déjà des intégrations en France.
-        </p>
-      </section>
-
-      <!-- COMMUNAUTÉ -->
-      <section id="discord" class="section">
-        <h3 class="section-title text-center">Communauté</h3>
-        <p class="text-center">Le meilleur moyen d’échanger et contribuer au projet est notre serveur Discord.</p>
-        <div class="d-grid-cta mx-auto" style="max-width:420px">
-          <a class="btn btn-primary w-100" href="https://discord.gg/5s9xfbZPBR" target="_blank" rel="noopener">Rejoindre le Discord</a>
-        </div>
-      </section>
-    </main>
-
-    <footer class="text-center py-4">
-      <div class="mb-2">
-        <a href="https://discord.gg/5s9xfbZPBR" target="_blank" rel="noopener" aria-label="Discord" class="me-2">
-          <i class="fab fa-discord"></i>
-        </a>
-        <a href="https://x.com/Chauff_pool" target="_blank" rel="noopener" aria-label="X (Twitter)" class="me-2">
-          <i class="fab fa-x-twitter"></i>
-        </a>
-        <a href="https://bitbucket.org/ckolivas/workspace/projects/CKPOOL" target="_blank" rel="noopener" aria-label="ckpool (Bitbucket)">
-          <i class="fab fa-bitbucket"></i>
-        </a>
       </div>
-      <div class="muted">
-        © 2025 Chauffagistes Pool – Made with ❤️ en France — 
-        <a href="/mentions-legales.html" class="text-decoration-none">Mentions légales</a>
+    </section>
+
+
+
+    <!-- BOTTOM SECTION: History charts -->
+    <section class="charts">
+      <div class="wrap">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Hashrate History</h2>
+            <span class="sub">Rolling pool hashrate over time</span>
+          </div>
+          <canvas id="chartHashrate" class="chart-fixed" height="140"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Monthly Best Share</h2>
+            <span class="sub">Top share per month (difficulty units)</span>
+          </div>
+          <canvas id="chartBestShare" class="chart-fixed" height="140"></canvas>
+        </div>
       </div>
-    </footer>
+    </section>
+  </main>
 
-    <!-- Vendor JS (Bootstrap + Chart.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <footer class="site-footer">
+    <div class="wrap">
+      <p class="donate">
+        If you like this pool, please consider a donation:
+        <code id="addrBTC">bc1qkt3n2yzu0kxlm72hhhx9vnxge8zhr5k2q4zc6l</code>
+        <button class="btn btn-min" data-copy="#addrBTC">Copy</button>
+      </p>
+      <p class="fine">© 2025 Rider Pool — Hosted in France — 1% fee — BC2 Solo</p>
+    </div>
+  </footer>
 
-    <!-- App JS -->
-    <script src="app.js"></script>
-
-    <!-- JSON-LD Organization (SEO) -->
-    <script type="application/ld+json">
-    {
-      "@context":"https://schema.org",
-      "@type":"WebSite",
-      "name":"Chauffagistes Pool",
-      "url":"https://chauffagistes-pool.fr",
-      "description":"Pool Bitcoin communautaire française (0% fees) valorisant la chaleur du minage.",
-      "publisher":{ "@type":"Organization", "name":"Chauffagistes Pool", "logo":{"@type":"ImageObject","url":"https://chauffagistes-pool.fr/logo.jpg"} }
-    }
-    </script>
-  </body>
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
 </html>

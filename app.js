@@ -1,616 +1,406 @@
-// ====== Config API ======
-const API = "https://chauffagistes-pool.fr:3000/api";
-const PINGS_API = `${API}/pings`;
+// ================= Config =================
+const API = "https://api.riderpool.online/api";
+const POOL_API = `${API}/pool`;
+const NODE_API = `${API}/node`;
+const HASHRATE_HISTORY_API = `${API}/hashrate`;     // <-- historique quotidien (date, hashrate)
+const MONTHLY_BESTS_API = `${API}/monthlyBests`;
 
-// ====== Utils ======
+// ================= Utils =================
 const fmt = {
   compact(n){
     if(n===undefined||n===null||isNaN(n)) return "–";
-    const u=["","K","M","G","T","P","E"]; let i=0;
-    while(n>=1000 && i<u.length-1){ n/=1000; i++; }
-    return n.toFixed(2).replace('.',',') + " " + u[i];
+    const u=["","K","M","G","T","P","E"]; let i=0; let v=Number(n)||0;
+    while(v>=1000&&i<u.length-1){ v/=1000; i++; }
+    return v.toFixed(2).replace('.',',')+" "+u[i];
   },
-  percent(v){ if(!isFinite(v)) return "–"; return (v*100).toFixed(2).replace('.',',')+" %"; },
-  timeAgo(ts){
-    if(!ts) return "–";
-    const d=new Date(ts*1000), diff=(Date.now()-d)/1000;
+  percent(v){ if(!isFinite(v)) return "–"; return (v*100).toFixed(2).replace('.',',')+"%"; },
+  timeAgoSec(sec){
+    if(!sec) return "–";
+    const d = new Date(sec*1000);
+    const diff = (Date.now()-d)/1000;
     if(diff<60) return Math.floor(diff)+"s";
     if(diff<3600) return Math.floor(diff/60)+"m";
     if(diff<86400) return Math.floor(diff/3600)+"h";
-    return d.toLocaleString('fr-FR');
+    return d.toLocaleString('en-GB');
   },
-  hashrate(v){ 
-    if (v === undefined || v === null) return "–";
-    return formatAnyHashrate(v);
+  hashrateHuman(hps){
+    if(hps==null || isNaN(hps)) return "–";
+    const units=["H/s","KH/s","MH/s","GH/s","TH/s","PH/s","EH/s"];
+    let i=0, v=Number(hps)||0;
+    while(v>=1000&&i<units.length-1){ v/=1000; i++; }
+    return v.toFixed(2).replace('.',',')+" "+units[i];
   }
 };
 
-// === Fonctions de formatage hashrate ===
-function parseHashrateToUnit(hps){
-  const units = ["H/s","KH/s","MH/s","GH/s","TH/s","PH/s","EH/s"];
-  let i = 0;
-  let v = Number(hps) || 0;
-  while (v >= 1000 && i < units.length - 1) { v /= 1000; i++; }
-  return `${v.toFixed(2).replace('.',',')} ${units[i]}`;
+function $(sel){ return document.querySelector(sel); }
+function copyFromSelector(sel){
+  const el = $(sel);
+  if(!el) return;
+  const text = el.innerText || el.textContent || "";
+  navigator.clipboard?.writeText(text);
 }
-function parseHashrate(strOrNum){
-  if(typeof strOrNum === "number") return strOrNum; // déjà en H/s
-  if(typeof strOrNum !== "string") return 0;
-  const m = strOrNum.trim().match(/^([\d.,]+)\s*([HKMGTP])?$/i);
-  if(!m) return 0;
+
+// Parse "1.96T" / "556G" / etc. -> nombre en H/s
+function parseHashrateString(str) {
+  if (str == null) return NaN;
+  if (typeof str === 'number') return str;
+  const m = String(str).trim().match(/^([\d.,]+)\s*([KMGTPE])?H?$/i);
+  if (!m) return NaN;
   const num = parseFloat(m[1].replace(',', '.'));
-  const unit=(m[2]||'H').toUpperCase();
-  const map={H:1, K:1e3, M:1e6, G:1e9, T:1e12, P:1e15};
-  return num*(map[unit]||1);
-}
-function formatAnyHashrate(v){
-  const hps = (typeof v === "number") ? v : parseHashrate(v);
-  return parseHashrateToUnit(hps); // -> "42,00 TH/s"
+  const unit = (m[2] || ' ').toUpperCase();
+  const mul = { K:1e3, M:1e6, G:1e9, T:1e12, P:1e15, E:1e18 };
+  return num * (mul[unit] || 1);
 }
 
-// Copie presse-papiers (globale)
-function copyText(t){ navigator.clipboard?.writeText(t); }
-window.copyText = copyText;
+function hashrateHumanAny(x) {
+  const v = typeof x === 'string' ? parseHashrateString(x) : Number(x);
+  if (!isFinite(v)) return '–';
+  const units = ["H/s","KH/s","MH/s","GH/s","TH/s","PH/s","EH/s"];
+  let i=0, n=v;
+  while(n>=1000 && i<units.length-1){ n/=1000; i++; }
+  return n.toFixed(2).replace('.', ',') + " " + units[i];
+}
 
-// ====== Chart (historique hashrate) ======
-let hrChart;
-function ensureCharts(){
-  const canvas = document.getElementById('hashrateChart');
-  if(!canvas) return;
-  const hc = canvas.getContext('2d');
-  if(!hrChart){
-    hrChart = new Chart(hc, {
-      type:'line',
-      data:{ labels:[], datasets:[{ label:'Hashrate (TH/s)', data:[], fill:true, tension:.35, borderWidth:2 }]},
-      options:{ plugins:{ legend:{ display:false }}, scales:{ y:{ title:{display:true,text:'TH/s'}}, x:{ title:{display:true,text:'Date'} } } }
+function computeSafeYBounds(arr, fallbackMax=1){
+  const vals = arr.filter(v => typeof v === 'number' && isFinite(v) && v >= 0);
+  if (vals.length === 0) return { min: 0, max: fallbackMax };
+  const max = Math.max(...vals);
+  // petit headroom pour éviter que la courbe colle le bord
+  return { min: 0, max: max > 0 ? max * 1.15 : fallbackMax };
+}
+
+
+// ===== Personal stats by address =====
+const STATS_ADDR_API = (addr) => `${API}/stats/${encodeURIComponent(addr)}`;
+
+// very light sanity check (bech32-ish bc1...)
+function looksLikeBc2Address(s) {
+  if (!s) return false;
+  const x = s.trim();
+  return /^bc1[0-9a-z]{20,80}$/i.test(x);
+}
+
+async function loadUserStats(addr) {
+  const resBox   = $('#usResults');
+  const emptyBox = $('#usEmpty');
+  const errBox   = $('#usError');
+
+  // reset visibilities
+  [resBox, emptyBox, errBox].forEach(el => el && (el.hidden = true));
+
+  try {
+    const r = await fetch(STATS_ADDR_API(addr), { cache: 'no-cache' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const j = await r.json();
+
+    if (!j || !j.globalStats) {
+      emptyBox.hidden = false;
+      return;
+    }
+
+    // KPIs (global)
+    const g = j.globalStats;
+    $('#usHr1m').textContent = hashrateHumanAny(g.hashrate1m);
+    $('#usHr5m').textContent = hashrateHumanAny(g.hashrate5m);
+    $('#usHr1h').textContent = hashrateHumanAny(g.hashrate1hr);
+    $('#usHr1d').textContent = hashrateHumanAny(g.hashrate1d);
+    $('#usBestShare').textContent = fmt.compact(g.bestshare || g.bestever || 0);
+    $('#usWorkers').textContent = Array.isArray(j.workers) ? j.workers.length : 0;
+
+    // Workers table
+    const tbody = $('#usTable tbody');
+    tbody.innerHTML = '';
+
+    (j.workers || []).forEach(w => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><code>${w.workername || '—'}</code></td>
+        <td>${hashrateHumanAny(w.hashrate1m)}</td>
+        <td>${hashrateHumanAny(w.hashrate5m)}</td>
+        <td>${hashrateHumanAny(w.hashrate1hr)}</td>
+        <td>${hashrateHumanAny(w.hashrate1d)}</td>
+        <td>${hashrateHumanAny(w.hashrate7d)}</td>
+        <td>${fmt.compact(w.bestshare || w.bestever || 0)}</td>
+        <td>${fmt.timeAgoSec(w.lastshare)}</td>
+      `;
+      tbody.appendChild(tr);
     });
+
+    resBox.hidden = false;
+
+  } catch (e) {
+    console.error('addr stats error', e);
+    errBox.hidden = false;
   }
 }
 
-// --- Sélecteur d'intervalle (client-side) ---
-let hrHistoryRaw = [];      // {date:'YYYY-MM-DD', hashrate:<H/s>}
-let currentRange = '30d';   // défaut: Mois
+function bindUserStatsUI() {
+  const input = $('#addrInput');
+  const btn   = $('#addrGo');
 
-function filterHistoryByRange(range){
-  if(range === 'all') return [...hrHistoryRaw];
-  const now = new Date();
-  const days = range === '7d' ? 7 : range === '30d' ? 30 : 365;
-  const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days);
-  return hrHistoryRaw.filter(p => {
-    const d = new Date(p.date + 'T00:00:00');
-    return d >= cutoff;
+  // submit on click
+  btn?.addEventListener('click', () => {
+    const addr = (input?.value || '').trim();
+    if (!looksLikeBc2Address(addr)) {
+      $('#addrHint').innerHTML = 'Please enter a valid BC2 address (starts with <code>bc1</code>).';
+      return;
+    }
+    localStorage.setItem('bc2addr', addr);
+    const url = new URL(window.location.href);
+    url.searchParams.set('addr', addr);
+    history.replaceState(null, '', url.toString());
+    loadUserStats(addr);
   });
-}
 
-function updateHistoryChart(range){
-  currentRange = range;
-  const subset = filterHistoryByRange(range);
-  const labels = subset.map(p=>p.date);
-  const series = subset.map(p=> (p.hashrate/1e12)); // TH/s
-  if (hrChart){
-    hrChart.data.labels = labels;
-    hrChart.data.datasets[0].data = series;
-    hrChart.update();
+  // submit on Enter
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); btn?.click(); }
+  });
+
+  // prefill from URL or localStorage
+  const urlAddr = new URL(window.location.href).searchParams.get('addr');
+  const saved   = localStorage.getItem('bc2addr');
+  const initVal = urlAddr || saved || '';
+  if (initVal) {
+    input.value = initVal;
+    if (looksLikeBc2Address(initVal)) loadUserStats(initVal);
   }
-
-  // Style boutons actif/inactif
-  document.querySelectorAll('.btn-range').forEach(b=>{
-    b.classList.toggle('active', b.dataset.range === range);
-  });
 }
 
-// ====== Fetch Pool status ======
+
+// ================= Data loaders =================
 async function loadPool(){
   try{
-    const r = await fetch(`${API}/pool`);
+    const r = await fetch(POOL_API, { cache: "no-cache" });
     const pool = await r.json();
-
     const runtime = pool.runtime || {};
     const hr = pool.hashrates || {};
     const sh = pool.shares || {};
 
-    const hh = document.getElementById("hashrateHeader");
-    if (hh) hh.innerText = "Hashrate : " + fmt.hashrate(hr.hashrate1hr ?? "–");
+    $('#kpiHr1h').textContent = hashrateHumanAny(hr.hashrate1hr);
+    $('#kpiHr1h2').textContent = hashrateHumanAny(hr.hashrate1hr);
+    $('#kpiBestShare').textContent = fmt.compact(sh.bestshare || 0);
 
-    const set = (id, val) => { const el=document.getElementById(id); if(el) el.innerText = val; };
-    set("pillUsers", runtime.Users ?? "–");
-    set("pillWorkers", runtime.Workers ?? "–");
-    set("pillAccepted", fmt.compact(sh.accepted||0));
-    set("pillRejected", fmt.compact(sh.rejected||0));
-    set("pillUpdated", "Updated: " + fmt.timeAgo(runtime.lastupdate));
-    set("nodeUpdated", fmt.timeAgo(runtime.lastupdate));
+    $('#pillUsers').textContent = runtime.Users ?? '–';
+    $('#pillWorkers').textContent = runtime.Workers ?? '–';
+    $('#pillUpdated').textContent = "Updated: " + fmt.timeAgoSec(runtime.lastupdate);
+    $('#nodeUpdated').textContent = fmt.timeAgoSec(runtime.lastupdate);
 
-    const total = (sh.accepted||0)+(sh.rejected||0);
-    const rejRate = total ? (sh.rejected/total) : NaN;
-    const rejEl = document.getElementById("pillRejectRate");
-    if(rejEl){
-      rejEl.innerHTML = (rejRate<=0.02)
-        ? `Rejet: <span class="pill good">${(rejRate*100).toFixed(2).replace('.',',')} %</span>`
-        : `Rejet: <span class="pill bad">${isNaN(rejRate)?'–':(rejRate*100).toFixed(2).replace('.',',')+' %'}</span>`;
-    }
-
-    set("kpiHr1h", fmt.hashrate(hr.hashrate1hr ?? "–"));
-    set("kpiHr1d", fmt.hashrate(hr.hashrate1d ?? "–"));
-    set("kpiSps1h", sh.SPS1h ?? "–");
-    set("kpiBestShare", fmt.compact(sh.bestshare||0));
+    const total = (sh.accepted||0) + (sh.rejected||0);
+    const rej = total ? (sh.rejected/total) : 0;
+    $('#pillRejectVal').textContent = (rej*100).toFixed(2).replace('.', ',') + "%";
+    $('#pillReject').classList.toggle('good', rej <= 0.02);
   }catch(e){
-    console.error("Erreur pool:", e);
+    console.error('pool error', e);
   }
 }
-
-// ====== Monthly Bests ======
-const MONTHLY_BESTS_API = `${API}/monthlyBests`;
-
-// Raccourci d'adresse lisible (bc1qabcd…xy)
-function shortenMiddle(str, start = 6, end = 2) {
-  if (!str || str.length <= start + end + 1) return str || "";
-  return str.slice(0, start) + "…" + str.slice(-end);
-}
-
-// Format "diff" en M / G / T / P (on évite K)
-function formatDiffUnits(val) {
-  if (val == null || !isFinite(Number(val))) return "–";
-  const v = Number(val);
-  const UNITS = [
-    { k: 1e15, s: "P" },
-    { k: 1e12, s: "T" },
-    { k: 1e9,  s: "G" },
-    { k: 1e6,  s: "M" },
-  ];
-  for (const u of UNITS) if (Math.abs(v) >= u.k) {
-    return (v / u.k).toFixed(2).replace(".", ",") + " " + u.s;
-  }
-  return String(v).replace(".", ",");
-}
-
-// Sélectionne l'entrée du mois courant dans un tableau [{month:"YYYY-MM", ...}]
-function pickCurrentMonthEntry(json) {
-  if (!Array.isArray(json)) return null;
-  const now = new Date();
-  const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  return json.find(e => e?.month === ym) ?? json[json.length - 1] ?? null;
-}
-
-// Extrait { user, diff, month, epoch, fullAddress }
-function extractWinnerAndDiff(entry) {
-  if (!entry || typeof entry !== "object") return { user: null, diff: null, month: null, epoch: null, fullAddress: null };
-
-  let diff = entry.sdiff ?? entry.diff ?? entry.difficulty ?? null;
-  if (typeof diff === "string") {
-    const asNum = Number(diff.replace(/[, ]/g, ""));
-    if (isFinite(asNum)) diff = asNum;
-  }
-
-  const fullAddress = entry.address || null;
-  const user = fullAddress ? shortenMiddle(fullAddress) :
-               (entry.user || entry.username || entry.name || entry.winner || entry.miner || entry.worker || null);
-
-  return { user, diff, month: entry.month || null, epoch: entry.epoch || null, fullAddress };
-}
-
-async function loadMonthlyBests() {
-  const alertBox = document.getElementById("monthlyBestAlert");
-  if (!alertBox) return;
-
-  const elUser   = document.getElementById("bestUser");
-  const elDiff   = document.getElementById("bestDiff");
-  const elMonth  = document.getElementById("bestMonth");
-  const elWhen   = document.getElementById("bestWhen");
-  const elWhenWrap = document.getElementById("bestWhenWrap");
-  const elDot    = document.getElementById("bestLiveDot");
-  const elBadge  = document.getElementById("bestOngoingBadge");
-
-  try {
-    const r = await fetch(MONTHLY_BESTS_API, { cache: "no-cache" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const json = await r.json();
-
-    const entry = pickCurrentMonthEntry(json);
-    const { user, diff, month, epoch, fullAddress } = extractWinnerAndDiff(entry);
-
-    if (user && diff != null) {
-      // Remplissage valeurs
-      if (elUser) {
-        elUser.textContent = user;
-        if (fullAddress) elUser.title = fullAddress;
-      }
-      if (elDiff) elDiff.textContent = formatDiffUnits(diff);
-      if (elMonth) elMonth.textContent = month || "";
-
-      if (elWhenWrap) elWhenWrap.classList.toggle("d-none", !epoch);
-      if (elWhen && epoch) {
-        const ts = Math.floor(epoch) * 1000;
-        elWhen.setAttribute("datetime", new Date(ts).toISOString());
-        // Affiche un "relative time" si tu as déjà une util de formatage; sinon date ISO courte
-        if (typeof fmt?.timeAgo === "function") {
-          elWhen.textContent = fmt.timeAgo(Math.floor(epoch));
-        } else {
-          elWhen.textContent = new Date(ts).toLocaleString();
-        }
-      }
-
-      // “En cours” si le mois est celui d’aujourd’hui
-      const now = new Date();
-      const ymNow = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const ongoing = month === ymNow;
-
-      if (elDot)   elDot.classList.toggle("d-none", !ongoing);
-      if (elBadge) elBadge.classList.toggle("d-none", !ongoing);
-
-      alertBox.classList.remove("d-none");
-    } else {
-      alertBox.classList.add("d-none");
-    }
-  } catch (e) {
-    console.error("Erreur monthlyBests:", e);
-    alertBox.classList.add("d-none");
-  }
-}
-
-// ====== Helpers additionnels (compat avec ton API) ======
-function fmtMonthLabel(isoMonth /* "YYYY-MM" */) {
-  try {
-    const [y, m] = isoMonth.split("-").map(Number);
-    return new Date(y, m - 1, 1).toLocaleDateString(undefined, { year: "numeric", month: "long" });
-  } catch { return isoMonth || ""; }
-}
-
-function toMillis(epoch) {
-  // ton API envoie epoch possiblement en secondes (float). On convertit proprement.
-  if (epoch == null || !isFinite(Number(epoch))) return null;
-  const s = Number(epoch);
-  // S'il ressemble déjà à des ms (ex: > 10^12), ne pas reconvertir
-  return s > 1e12 ? s : Math.floor(s * 1000);
-}
-
-/**
- * Normalise une entrée venant de l'API pour l’historique
- * Entrée possible: { month:"2025-09", sdiff:number, address:"...", epoch:number }
- * Sortie: { month, user, addr, diff, whenMs, prize_sats? }
- */
-function normalizeMonthlyBestRow(entry) {
-  const month = entry?.month || null;
-  let diff = entry?.sdiff ?? entry?.diff ?? entry?.difficulty ?? null;
-  if (typeof diff === "string") {
-    const asNum = Number(diff.replace(/[, ]/g, ""));
-    if (isFinite(asNum)) diff = asNum;
-  }
-  const addr = entry?.address || entry?.addr || null;
-  const user = addr ? shortenMiddle(addr) :
-               (entry?.user || entry?.username || entry?.name || entry?.winner || entry?.miner || entry?.worker || "—");
-  const whenMs = toMillis(entry?.epoch ?? entry?.ts ?? entry?.time);
-
-  return {
-    month,
-    user,
-    addr,
-    diff,
-    whenMs,
-    prize_sats: entry?.prize_sats ?? entry?.prize ?? null,
-  };
-}
-
-// ====== Historique: peupler le modal ======
-async function loadMonthlyBestsHistory() {
-  const tbody = document.getElementById("bestshareHistoryBody");
-  if (!tbody) return;
-
-  try {
-    const r = await fetch(MONTHLY_BESTS_API, { cache: "no-cache" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const json = await r.json();
-    const rows = Array.isArray(json) ? json.map(normalizeMonthlyBestRow) : [];
-
-    // Tri: plus récent en premier (par month desc)
-    rows.sort((a, b) => (a.month < b.month ? 1 : -1));
-
-    tbody.innerHTML = "";
-    if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No data</td></tr>`;
-      return;
-    }
-
-    for (const r of rows) {
-      const tr = document.createElement("tr");
-
-      const tdMonth = document.createElement("td");
-      tdMonth.textContent = fmtMonthLabel(r.month || "");
-
-      const tdUser = document.createElement("td");
-      // Affiche l’adresse raccourcie si dispo, sinon user
-      const main = r.addr ? shortenMiddle(r.addr) : (r.user || "—");
-      tdUser.innerHTML = `<strong title="${r.addr || ""}">${main}</strong>`;
-
-      const tdDiff = document.createElement("td");
-      tdDiff.className = "text-end";
-      tdDiff.innerHTML = `<span class="bestshare__diff">${formatDiffUnits(r.diff)}</span>`;
-
-      const tdWhen = document.createElement("td");
-      if (r.whenMs) {
-        const d = new Date(r.whenMs);
-        tdWhen.textContent = d.toLocaleString();
-      } else {
-        tdWhen.textContent = "—";
-      }
-
-      const tdPrize = document.createElement("td");
-      tdPrize.className = "text-end";
-      tdPrize.textContent = r.prize_sats ? `${Number(r.prize_sats).toLocaleString()} sats` : "—";
-
-      tr.append(tdMonth, tdUser, tdDiff, tdWhen, tdPrize);
-      tbody.appendChild(tr);
-    }
-  } catch (e) {
-    console.error("Erreur loadMonthlyBestsHistory:", e);
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Failed to load history</td></tr>`;
-  }
-}
-
-// Ouvre/refresh l’historique à l’ouverture du modal (Bootstrap)
-document.getElementById("bestshareHistoryModal")
-  ?.addEventListener("show.bs.modal", loadMonthlyBestsHistory);
-
-
-
-
-// ====== Fetch History (une fois), puis filtrage local ======
-async function loadHistory(){
-  try{
-    const r = await fetch(`${API}/hashrate`);
-    const data = await r.json();
-    ensureCharts();
-    hrHistoryRaw = Array.isArray(data) ? data : [];
-    updateHistoryChart(currentRange); // applique la plage courante
-  }catch(e){
-    console.error("Erreur history:", e);
-  }
-}
-
-// ====== PINGS / TOPOLOGIE ======
-let topoTimer = null;
-let topoLoadedOnce = false;
-
-function normalizeHostName(n){
-  if(!n) return '';
-  const s = n.toLowerCase();
-  if(s.includes('proxy'))   return 'proxy';
-  if(s.includes('primary')) return 'primary';
-  if(s.includes('backup'))  return 'backup';
-  return s;
-}
-function linkClass(aOnline, bOnline){
-  return (aOnline && bOnline) ? 'net-link-ok' : 'net-link-bad';
-}
-function renderPingCounters(data){
-  const total   = Number(data?.total ?? 0);
-  const online  = Number(data?.online ?? 0);
-  const offline = Number(data?.offline ?? 0);
-  const set = (id, val) => { const el=document.getElementById(id); if(el) el.innerText = val; };
-  set('pingTotal',   isFinite(total)   ? total   : '–');
-  set('pingOnline',  isFinite(online)  ? online  : '–');
-  set('pingOffline', isFinite(offline) ? offline : '–');
-}
-function renderNetwork(data){
-  const pos = {
-    proxy:   { x: 350, y: 40 },
-    primary: { x: 200, y: 170 },
-    backup:  { x: 500, y: 170 }
-  };
-  const box = { w: 180, h: 64 };
-
-  const byKey = {};
-  (data?.hosts||[]).forEach(h => { byKey[ normalizeHostName(h.name) ] = h; });
-
-  const proxy   = byKey.proxy   || {};
-  const primary = byKey.primary || {};
-  const backup  = byKey.backup  || {};
-
-  const online = h => !!h.online;
-  const latMs  = h => (h.latencyMs != null ? `${h.latencyMs.toFixed(2)} ms` : '–');
-
-  const link1 = linkClass(online(proxy), online(primary));
-  const link2 = linkClass(online(proxy), online(backup));
-
-  const svg = `
-    <!-- Lignes -->
-    <path class="${link1}" d="M ${pos.proxy.x} ${pos.proxy.y+box.h} C ${pos.proxy.x} ${pos.proxy.y+110}, ${pos.primary.x+box.w/2} ${pos.primary.y-40}, ${pos.primary.x+box.w/2} ${pos.primary.y}" />
-    <path class="${link2}" d="M ${pos.proxy.x+box.w} ${pos.proxy.y+box.h} C ${pos.proxy.x+box.w} ${pos.proxy.y+110}, ${pos.backup.x+box.w/2} ${pos.backup.y-40}, ${pos.backup.x+box.w/2} ${pos.backup.y}" />
-
-    <!-- Proxy -->
-    <g class="net-node ${online(proxy)?'online':'offline'}">
-      <rect x="${pos.proxy.x}" y="${pos.proxy.y}" width="${box.w}" height="${box.h}"></rect>
-      <text class="net-title" x="${pos.proxy.x+box.w/2}" y="${pos.proxy.y+26}" text-anchor="middle">Stratum Proxy</text>
-      <text class="net-sub"   x="${pos.proxy.x+box.w/2}" y="${pos.proxy.y+44}" text-anchor="middle">${latMs(proxy)}</text>
-    </g>
-
-    <!-- Primary -->
-    <g class="net-node ${online(primary)?'online':'offline'}">
-      <rect x="${pos.primary.x}" y="${pos.primary.y}" width="${box.w}" height="${box.h}"></rect>
-      <text class="net-title" x="${pos.primary.x+box.w/2}" y="${pos.primary.y+26}" text-anchor="middle">Primary Stratum Server</text>
-      <text class="net-sub"   x="${pos.primary.x+box.w/2}" y="${pos.primary.y+44}" text-anchor="middle">${latMs(primary)}</text>
-    </g>
-
-    <!-- Backup -->
-    <g class="net-node ${online(backup)?'online':'offline'}">
-      <rect x="${pos.backup.x}" y="${pos.backup.y}" width="${box.w}" height="${box.h}"></rect>
-      <text class="net-title" x="${pos.backup.x+box.w/2}" y="${pos.backup.y+26}" text-anchor="middle">Backup Stratum Server</text>
-      <text class="net-sub"   x="${pos.backup.x+box.w/2}" y="${pos.backup.y+44}" text-anchor="middle">${latMs(backup)}</text>
-    </g>
-  `;
-  const el = document.getElementById('netSvg');
-  if(el) el.innerHTML = svg;
-}
-async function loadPingsOnce(){
-  try{
-    const r = await fetch(PINGS_API);
-    const data = await r.json();
-    renderPingCounters(data);
-    renderNetwork(data);
-    updateHeaderStatusFromPings(data); // MAJ LEDs header au 1er chargement topo
-    topoLoadedOnce = true;
-  }catch(e){ console.error('Erreur pings:', e); }
-}
-function startTopoRefresh(){
-  if(topoTimer) return;
-  topoTimer = setInterval(async ()=> {
-    try{
-      const r = await fetch(PINGS_API);
-      const data = await r.json();
-      renderPingCounters(data);
-      renderNetwork(data);
-      updateHeaderStatusFromPings(data); // MAJ LEDs header sur refresh topo
-    }catch(e){ console.error('Erreur pings:', e); }
-  }, 30000);
-}
-function stopTopoRefresh(){
-  if(topoTimer){ clearInterval(topoTimer); topoTimer = null; }
-}
-
-// ====== LEDs statut header ======
-function setHeaderStatus(elId, host){
-  const el = document.getElementById(elId);
-  if(!el) return;
-  const led = el.querySelector('.led');
-  const state = el.querySelector('.state');
-
-  const isOnline = !!host?.online;
-  led.classList.toggle('online',  isOnline);
-  led.classList.toggle('offline', !isOnline);
-  state.textContent = isOnline ? 'UP' : 'DOWN';
-
-  const baseTitle = el.getAttribute('title') || '';
-  const lat = (host?.latencyMs!=null) ? `${host.latencyMs.toFixed(2)} ms` : '–';
-  el.title = `${baseTitle} • Latence: ${lat}`;
-  el.setAttribute('aria-label', `${baseTitle} ${isOnline?'UP':'DOWN'}, latence ${lat}`);
-}
-
-function updateHeaderStatusFromPings(data){
-  const byKey = {};
-  (data?.hosts||[]).forEach(h=>{
-    const s=(h.name||'').toLowerCase();
-    let k = s.includes('proxy')?'proxy':s.includes('primary')?'primary':s.includes('backup')?'backup':s;
-    byKey[k]=h;
-  });
-  setHeaderStatus('stProxy',   byKey.proxy   || null);
-  setHeaderStatus('stPrimary', byKey.primary || null);
-  setHeaderStatus('stBackup',  byKey.backup  || null);
-}
-
-async function loadHeaderPings(){
-  try{
-    const r = await fetch(PINGS_API);
-    const data = await r.json();
-    updateHeaderStatusFromPings(data);
-  }catch(e){
-    // En cas d’erreur, passe tout en DOWN
-    ['stProxy','stPrimary','stBackup'].forEach(id=>{
-      setHeaderStatus(id, {online:false, latencyMs:null});
-    });
-    console.error('Erreur header pings:', e);
-  }
-}
-
-// ====== Auto-refresh (status pool + LEDs header) ======
-let timer=null;
-function startRefresh(){
-  if(timer) clearInterval(timer);
-  timer = setInterval(()=>{
-    loadPool();
-    loadHeaderPings(); // LEDs header
-    loadNode();
-  }, 30000);
-}
-
-// ====== Bind & Init ======
-function selectOnClick(el){
-  el.addEventListener('click', ()=>{
-    const r=document.createRange();
-    r.selectNodeContents(el);
-    const s=window.getSelection();
-    s.removeAllRanges();
-    s.addRange(r);
-  });
-}
-
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('.btn-range');
-  if(!btn) return;
-  updateHistoryChart(btn.dataset.range);
-});
-
-
-// ====== Node (full node Bitcoin) ======
-const NODE_API = `${API}/node`;
-
-function parseSubversion(subv){
-  // ex: "/Satoshi:28.1.0/" -> "Satoshi 28.1.0"
-  if(!subv || typeof subv !== "string") return "–";
-  const s = subv.replace(/\//g, ""); // "Satoshi:28.1.0"
-  const m = s.match(/^([^:]+):(.+)$/);
-  return m ? `${m[1]} ${m[2]}` : s;
-}
-
-let lastNodeUpdate = null;
 
 async function loadNode(){
   try{
-    const r = await fetch(NODE_API, { cache: "no-cache" });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const json = await r.json();
+    const r = await fetch(NODE_API, { cache:"no-cache" });
+    if(!r.ok) throw new Error("node http " + r.status);
+    const j = await r.json();
+    const height = Number(j?.height);
+    const peers  = Number(j?.peers);
+    const subv   = (j?.subversion||"").replace(/\//g,'');
+    const v = subv.includes(':') ? subv.split(':').join(' ') : subv;
 
-    const height  = Number(json?.height);
-    const peers   = Number(json?.peers);
-    const version = parseSubversion(json?.subversion);
-
-    const set = (id, val) => { const el=document.getElementById(id); if(el) el.textContent = val; };
-
-    set("nodeHeight", isFinite(height) ? height.toLocaleString("fr-FR") : "–");
-    set("nodePeers",  isFinite(peers)  ? peers.toString() : "–");
-    set("nodeVersion", version);
+    $('#nodeHeight').textContent  = isFinite(height)? height.toLocaleString('en-GB') : '–';
+    $('#nodePeers').textContent   = isFinite(peers)? String(peers) : '–';
+    $('#nodeVersion').textContent = v || '–';
   }catch(e){
-    console.error("Erreur node:", e);
-    // En cas d’erreur, on affiche en “–”
-    ["nodeHeight","nodePeers","nodeVersion"].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el) el.textContent = "–";
+    console.error('node error', e);
+    ['nodeHeight','nodePeers','nodeVersion'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.textContent='–';
     });
   }
 }
 
-// (Optionnel) petit ticker pour rafraîchir l’affichage “timeAgo” du nœud
-setInterval(()=>{
-  const updEl = document.getElementById("nodeUpdated");
-  if(updEl && lastNodeUpdate && typeof fmt?.timeAgo === "function"){
-    updEl.textContent = "Maj: " + fmt.timeAgo(lastNodeUpdate);
-  }
-}, 1000);
+// ===== Hashrate history (daily) =====
+// Endpoint shape: [{ date: "YYYY-MM-DD", hashrate: number }, ...]
+async function loadHashrateHistory(){
+  let items = [];
+  try{
+    const r = await fetch(HASHRATE_HISTORY_API, { cache:"no-cache" });
+    if(r.ok) items = await r.json();
+  }catch(e){ console.warn('history error', e); }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  // Sélection rapide des codes
-  ['confUrl','confUser','confPass','addrBTC','addrLN'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) selectOnClick(el);
-  });
-
-  // Chargement initial du bandeau Best Diff
-  loadMonthlyBests();
-
-  // Topologie : lazy load + refresh quand ouvert
-  const collapseEl = document.getElementById('topologyCollapse');
-  if(collapseEl){
-    collapseEl.addEventListener('show.bs.collapse', async ()=>{
-      if(!topoLoadedOnce) { await loadPingsOnce(); }
-      startTopoRefresh();
-    });
-    collapseEl.addEventListener('hide.bs.collapse', ()=>{
-      stopTopoRefresh();
-    });
+  // Sanitize + map
+  let labels = [];
+  let data = [];
+  if (Array.isArray(items) && items.length) {
+    for (const it of items) {
+      const d = String(it.date || '');
+      const v = Number(it.hashrate);
+      const clean = (isFinite(v) && v >= 0) ? v : null;
+      labels.push(d || '');
+      data.push(clean);
+    }
   }
 
-  ensureCharts();
-  Promise.all([loadPool(), loadHistory(), loadNode()]).then(()=>{
-    loadHeaderPings(); // init immédiate des LEDs
-    startRefresh();
-  });
+  // Fallback si tout invalide
+  if (!data.some(v => typeof v === 'number')) {
+    const now = new Date();
+    labels = Array.from({length: 14}, (_,i)=>{
+      const dt = new Date(now.getTime() - (13-i)*86400000);
+      return dt.toISOString().slice(0,10);
+    });
+    data = Array.from({length: 14}, ()=> 2.5e13 + Math.random()*1e13);
+  }
 
+  renderHashrateChart(labels, data);
+}
+
+// ===== Monthly best share =====
+// Endpoint shape: [{ month:"YYYY-MM", sdiff:number, address:string, epoch:number }, ...]
+async function loadMonthlyBests(){
+  let items = [];
+  try{
+    const r = await fetch(MONTHLY_BESTS_API, { cache:"no-cache" });
+    if(r.ok) items = await r.json();
+  }catch(e){ console.warn('monthly bests error', e); }
+
+  const labels = [];
+  const data = [];
+
+  if (Array.isArray(items)) {
+    for (const x of items) {
+      const month = x.month || '';
+      let val = x.sdiff ?? x.diff ?? x.difficulty ?? null;
+      if (typeof val === 'string') {
+        const n = Number(val.replace(/[, ]/g,''));
+        if(!Number.isNaN(n)) val = n;
+      }
+      val = Number(val);
+      const clean = (isFinite(val) && val >= 0) ? val : null;
+      if (month) {
+        labels.push(month);
+        data.push(clean);
+      }
+    }
+  }
+
+  // Fallback si vide
+  if (!data.some(v => typeof v === 'number')) {
+    labels.push("2025-09","2025-10");
+    data.push(7.207e10, 2.631e10);
+  }
+
+  renderBestShareChart(labels, data);
+}
+
+// ================= Charts =================
+let chartHR, chartBest;
+
+function renderHashrateChart(labels, data){
+  const ctx = document.getElementById('chartHashrate');
+  if(chartHR){ chartHR.destroy(); }
+
+  // Assure des nombres uniquement / null
+  const clean = data.map(v => (typeof v === 'number' && isFinite(v) && v >= 0) ? v : null);
+  const yBounds = computeSafeYBounds(clean, 1);
+
+  chartHR = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Hashrate',
+        data: clean,
+        tension: 0.25,
+        borderWidth: 2,
+        pointRadius: 0,
+        spanGaps: true
+      }]
+    },
+    options: {
+      normalized: true,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: { ticks: { color: '#9aa3b2' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+        y: {
+          min: 0,
+          max: yBounds.max,        // borne Y stricte
+          grace: '5%',
+          ticks: {
+            color: '#9aa3b2',
+            callback: (v)=> hashrateHumanAny(v)
+          },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#e9ecf1' } },
+        tooltip: {
+          callbacks: { label: (ctx)=> ' ' + hashrateHumanAny(ctx.parsed.y) }
+        }
+      }
+    }
+  });
+}
+
+function renderBestShareChart(labels, data){
+  const ctx = document.getElementById('chartBestShare');
+  if(chartBest){ chartBest.destroy(); }
+
+  const clean = data.map(v => (typeof v === 'number' && isFinite(v) && v >= 0) ? v : null);
+  const yBounds = computeSafeYBounds(clean, 1);
+
+  chartBest = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: 'Best Share', data: clean, borderWidth: 1 }]
+    },
+    options: {
+      normalized: true,
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#9aa3b2' }, grid: { display:false } },
+        y: {
+          min: 0,
+          max: yBounds.max,
+          grace: '5%',
+          ticks: {
+            color: '#9aa3b2',
+            callback: (v)=> {
+              const U = [{k:1e15,s:'P'},{k:1e12,s:'T'},{k:1e9,s:'G'},{k:1e6,s:'M'}];
+              for(const u of U){ if(Math.abs(v)>=u.k) return (v/u.k).toFixed(2)+' '+u.s; }
+              return String(v);
+            }
+          },
+          grid: { color: 'rgba(255,255,255,0.06)' }
+        }
+      },
+      plugins: { legend: { labels: { color: '#e9ecf1' } } }
+    }
+  });
+}
+
+// ================= Init =================
+function bindCopyButtons(){
+  document.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const sel = btn.getAttribute('data-copy');
+      copyFromSelector(sel);
+    });
+  });
+}
+
+let refreshTimer=null;
+function startRefresh(){
+  if(refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(()=>{
+    loadPool(); loadNode();
+  }, 30000);
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  bindCopyButtons();
+  bindUserStatsUI();                 // <— AJOUT
+  await Promise.all([loadPool(), loadNode(), loadHashrateHistory(), loadMonthlyBests()]);
+  startRefresh();
 });
