@@ -99,7 +99,7 @@ code {
 .led.up { background: var(--good); box-shadow: 0 0 16px 2px rgba(18,194,154,.35) }
 .led.down { background: var(--bad) }
 
-/* Charts */
+/* Charts & Panels */
 .charts { padding: 24px 0 34px }
 .panel {
   border:1px solid var(--border);
@@ -126,17 +126,16 @@ code {
   .hero-card { grid-template-columns: 1fr; }
   .hero-side { border-left: none; border-top: 1px solid var(--border); border-top-right-radius: 0; border-bottom-left-radius: 16px; }
 }
-/* Force a real rendering height for charts */
+
+/* Charts fixed height (for smoother rendering) */
 .chart-fixed {
-  height: 300px;        /* adjust to taste */
+  height: 300px;
   max-height: 300px;
   display: block !important;
 }
 
 /* Ensure canvas can’t collapse in grid/flex */
-canvas {
-  display: block;
-}
+canvas { display: block; }
 
 /* User stats */
 .userstats .us-input input#addrInput{
@@ -144,10 +143,40 @@ canvas {
   border-radius:10px; padding:.45rem .6rem; width:100%;
 }
 .userstats .us-kpis { margin-top: 12px }
-.us-tablewrap{ overflow:auto; margin-top:12px; border:1px solid var(--border); border-radius:12px }
-.us-table{ width:100%; border-collapse: collapse; min-width:720px }
+
+/* Tables (generic) */
+.us-tablewrap{
+  overflow-x: auto;       /* scroll horizontal si nécessaire */
+  overflow-y: hidden;
+  margin-top:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+.us-table{
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;           /* empêche la largeur mini rigide */
+  margin: 0 auto;         /* centre le tableau dans son conteneur */
+  border-collapse: collapse;
+  table-layout: fixed;    /* évite l’étirement incontrôlé des colonnes */
+}
 .us-table th, .us-table td{
-  border-bottom:1px solid var(--border); padding:10px 12px; text-align:left; white-space:nowrap
+  border-bottom:1px solid var(--border);
+  padding:10px 12px;
+  text-align:left;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow: ellipsis;
 }
 .us-table thead th{ color:var(--muted); font-weight:600 }
 .us-table tbody tr:hover{ background: rgba(255,255,255,0.03) }
+.us-table .rank { width: 2.5rem; text-align: center; opacity: .85; }
+.us-table .t-right { text-align: right; }
+.us-table .muted { opacity: .6; text-align: center; }
+
+/* Leaders (Top Hashrate / Top Best Shares) */
+.leaders .wrap { display: grid; gap: 20px; }
+@media (min-width: 900px){
+  .leaders .wrap { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } /* permet la contraction sans overflow */
+}
+.leaders .panel { min-width: 0; } /* indispensable pour permettre au contenu de rétrécir */

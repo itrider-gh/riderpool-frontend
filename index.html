@@ -35,7 +35,6 @@
         <div class="pill" title="Estimated total pool hashrate in the last hour">HR 1h: <strong id="kpiHr1h">–</strong></div>
         <div class="pill" title="Active users / workers">Users: <strong id="pillUsers">–</strong></div>
         <div class="pill">Workers: <strong id="pillWorkers">–</strong></div>
-        <div class="pill good" id="pillReject">Reject: <strong id="pillRejectVal">–</strong></div>
         <div class="pill dim" id="pillUpdated">Updated: –</div>
       </div>
     </div>
@@ -181,6 +180,51 @@
       </div>
     </section>
 
+
+    <!-- LEADERS: Top hashrate & best shares -->
+    <section class="leaders">
+      <div class="wrap">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Top Hashrate (1h)</h2>
+            <span class="sub">Addresses with the highest 1h hashrate</span>
+          </div>
+          <div class="us-tablewrap">
+            <table class="us-table" id="tblTopHashrate">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Address</th>
+                  <th>HR 1h</th>
+                  <th>Workers</th>
+                </tr>
+              </thead>
+              <tbody><!-- rows injected --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Top Best Shares</h2>
+            <span class="sub">Highest difficulty shares submitted</span>
+          </div>
+          <div class="us-tablewrap">
+            <table class="us-table" id="tblTopBestShare">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Address</th>
+                  <th>Best Share</th>
+                  <th>Workers</th>
+                </tr>
+              </thead>
+              <tbody><!-- rows injected --></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
 
 
     <!-- BOTTOM SECTION: History charts -->

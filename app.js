@@ -4,6 +4,8 @@ const POOL_API = `${API}/pool`;
 const NODE_API = `${API}/node`;
 const HASHRATE_HISTORY_API = `${API}/hashrate`;     // <-- historique quotidien (date, hashrate)
 const MONTHLY_BESTS_API = `${API}/monthlyBests`;
+const TOP_API = `${API}/top`;
+
 
 // ================= Utils =================
 const fmt = {
@@ -69,6 +71,84 @@ function computeSafeYBounds(arr, fallbackMax=1){
   return { min: 0, max: max > 0 ? max * 1.15 : fallbackMax };
 }
 
+function middleTrunc(addr, keep=6){
+  if(!addr) return '—';
+  const s=String(addr);
+  return s.length <= keep*2+3 ? s : `${s.slice(0,keep)}…${s.slice(-keep)}`;
+}
+
+// Boutons "Copy" intégrés aux lignes
+function bindInlineCopyButtons(){
+  document.querySelectorAll('[data-copy-val]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = btn.getAttribute('data-copy-val') || '';
+      navigator.clipboard?.writeText(v);
+    });
+  });
+}
+
+// load and display top
+async function loadTop(){
+  try{
+    const r = await fetch(TOP_API, { cache:'no-cache' });
+    if(!r.ok) throw new Error('http '+r.status);
+    const j = await r.json();
+    renderTopHashrate(j.topHashrate || []);
+    renderTopBestShares(j.topBestShares || []);
+  }catch(e){
+    console.warn('top error', e);
+    renderTopHashrate([]);
+    renderTopBestShares([]);
+  }
+}
+
+function renderTopHashrate(list){
+  const tbody = document.querySelector('#tblTopHashrate tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+
+  if(!Array.isArray(list) || list.length===0){
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">No data yet.</td></tr>`;
+    return;
+  }
+
+  list.sort((a,b)=>(b.totalHashrate1hr||0)-(a.totalHashrate1hr||0));
+
+  list.forEach((it, idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="rank">${idx+1}</td>
+      <td><code title="${it.address||''}">${middleTrunc(it.address||'—')}</code></td>
+      <td class="t-right">${hashrateHumanAny(it.totalHashrate1hr||0)}</td>
+      <td class="t-right">${it.workerCount ?? 0}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderTopBestShares(list){
+  const tbody = document.querySelector('#tblTopBestShare tbody');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+
+  if(!Array.isArray(list) || list.length===0){
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">No data yet.</td></tr>`;
+    return;
+  }
+
+  list.sort((a,b)=>(b.bestshare||0)-(a.bestshare||0));
+
+  list.forEach((it, idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="rank">${idx+1}</td>
+      <td><code title="${it.address||''}">${middleTrunc(it.address||'—')}</code></td>
+      <td class="t-right">${fmt.compact(it.bestshare||0)}</td>
+      <td class="t-right">${it.workerCount ?? 0}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
 // ===== Personal stats by address =====
 const STATS_ADDR_API = (addr) => `${API}/stats/${encodeURIComponent(addr)}`;
@@ -188,8 +268,8 @@ async function loadPool(){
 
     const total = (sh.accepted||0) + (sh.rejected||0);
     const rej = total ? (sh.rejected/total) : 0;
-    $('#pillRejectVal').textContent = (rej*100).toFixed(2).replace('.', ',') + "%";
-    $('#pillReject').classList.toggle('good', rej <= 0.02);
+    //$('#pillRejectVal').textContent = (rej*100).toFixed(2).replace('.', ',') + "%";
+    //$('#pillReject').classList.toggle('good', rej <= 0.02);
   }catch(e){
     console.error('pool error', e);
   }
@@ -394,13 +474,13 @@ let refreshTimer=null;
 function startRefresh(){
   if(refreshTimer) clearInterval(refreshTimer);
   refreshTimer = setInterval(()=>{
-    loadPool(); loadNode();
+    loadPool(); loadNode(); loadTop();
   }, 30000);
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
   bindCopyButtons();
   bindUserStatsUI();                 // <— AJOUT
-  await Promise.all([loadPool(), loadNode(), loadHashrateHistory(), loadMonthlyBests()]);
+  await Promise.all([loadPool(), loadNode(), loadHashrateHistory(), loadMonthlyBests(), loadTop()]);
   startRefresh();
 });
